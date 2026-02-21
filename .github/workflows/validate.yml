@@ -1,0 +1,42 @@
+name: Validate
+
+on:
+  workflow_call:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 25.2.1
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Prettier
+        run: npm run prettier
+
+      - name: Lint
+        run: npm run lint
+
+      - name: MarkdownLint
+        run: npm run markdownlint
+
+      - name: CSpell
+        run: npm run spelling
+
+      - name: Type checking
+        run: npm run type-check
+
+      - name: Testing
+        run: npm run test
+
+      - name: Knip inventory
+        run: npm run knip
