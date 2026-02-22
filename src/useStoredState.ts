@@ -142,7 +142,6 @@ export function useStoredState<State>({
       setSessionStorageState(value);
       setLocalStorageState(value);
     },
-
     [setLocalStorageState, setQueryState, setSessionStorageState]
   );
 
