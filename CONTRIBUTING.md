@@ -1,7 +1,6 @@
-# Contributing to is-it-ready
+# Contributing to use-stored-state
 
-Thank you for your interest in contributing to **is-it-ready**! This document
-provides guidelines to help you contribute effectively.
+Thank you for contributing to `use-stored-state`.
 
 ## Code of Conduct
 
@@ -22,8 +21,8 @@ welcoming and inclusive environment for everyone.
 2. Clone your fork locally:
 
    ```sh
-   git clone https://github.com/YOUR_USERNAME/is-it-ready.git
-   cd is-it-ready
+   git clone https://github.com/YOUR_USERNAME/useStoredState.git
+   cd useStoredState
    ```
 
 3. Install dependencies:
@@ -80,10 +79,10 @@ You can run individual checks as needed:
 
 ### Naming Conventions
 
-- **Files**: camelCase (e.g., `runOptions.ts`)
-- **Functions/Variables**: camelCase (e.g., `parseOptions`, `isReady`)
-- **Types/Interfaces**: PascalCase (e.g., `RunOptions`, `TaskConfig`)
-- **Test files**: `*.test.ts` suffix
+- **Files**: camelCase (e.g., `useStoredState.ts`)
+- **Functions/Variables**: camelCase (e.g., `parsePrimitiveState`)
+- **Types/Interfaces**: PascalCase (e.g., `UseStoredStateOptions`)
+- **Test files**: `*.test.ts` and `*.test.tsx`
 
 ## Testing
 
@@ -153,8 +152,8 @@ provided that:
 - **You understand the code** and can explain how it works
 - **All tests pass** and the code is properly tested
 
-AI is a tool to assist you, but you remain responsible for the quality and
-correctness of your contributions.
+AI can assist implementation, but contributors remain responsible for
+correctness and maintainability.
 
 ## Code Patterns and Best Practices
 
@@ -180,8 +179,8 @@ correctness of your contributions.
 ### Documentation
 
 - Prefer self-documenting code over comments
-- Use JSDoc for public APIs
-- Explain "why" not "what" in comments
+- Keep JSDoc accurate for public APIs
+- Explain "why" over "what" in comments
 - Keep comments up-to-date with code
 
 ## What NOT to Do
@@ -191,7 +190,7 @@ correctness of your contributions.
 - ❌ Don't commit code that doesn't pass `npm run check`
 - ❌ Don't mutate function parameters
 - ❌ Don't use `eval()` or similar dangerous functions
-- ❌ Don't hardcode file paths or system-specific values
+- ❌ Don't hardcode environment-specific assumptions
 - ❌ Don't add dependencies without careful consideration
 - ❌ Don't disable TypeScript at all
 - ❌ Don't disable ESLint rules without significant justification
@@ -219,8 +218,8 @@ correctness of your contributions.
 
 ## Need Help?
 
-- Check existing [issues](https://github.com/MaximSrour/is-it-ready/issues)
+- Check existing [issues](https://github.com/MaximSrour/useStoredState/issues)
 - Open a new issue for bugs or feature requests
 - Ask questions in your pull request
 
-Thank you for contributing to is-it-ready! 🚀
+Thanks for helping improve `use-stored-state`. 🚀

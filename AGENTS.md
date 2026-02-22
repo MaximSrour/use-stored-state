@@ -1,18 +1,22 @@
 # Agent Instructions
 
-This document provides guidelines for AI agents working on the is-it-ready project.
+This document provides guidelines for AI agents working on the
+`use-stored-state` project.
 
 ## Project Overview
 
-is-it-ready is a CLI tool that runs project formatting, linting, tests,
-inventory, and security checks in one unified dashboard. It's built with
-TypeScript and follows strict code quality standards.
+`use-stored-state` is a React hooks library.
+
+- `useStoredState` synchronizes state across query params, `sessionStorage`, and
+  `localStorage`.
+- `useKeyStore` provides lower-level synchronization for a single source.
 
 ## Key Technologies
 
 - **Language**: TypeScript (CommonJS)
-- **Testing**: Vitest
-- **Linting**: ESLint with TypeScript plugin
+- **Runtime**: React (peer dependency)
+- **Testing**: Vitest + Testing Library
+- **Linting**: ESLint
 - **Formatting**: Prettier
 - **Type Checking**: TypeScript compiler
 - **Dependency Analysis**: Knip
