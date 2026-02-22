@@ -1,46 +1,48 @@
-type KeyOptions =
-  | {
-      queryKey: string;
-      sessionStorageKey?: string;
-      localStorageKey?: string;
-    }
-  | {
-      queryKey?: string;
-      sessionStorageKey: string;
-      localStorageKey?: string;
-    }
-  | {
-      queryKey?: string;
-      sessionStorageKey?: string;
-      localStorageKey: string;
-    };
+type Prettify<T> = {
+  [K in keyof T]: T[K];
+} & NonNullable<unknown>;
 
-type ValidationOptions<State> =
-  | {
-      validValues: readonly State[];
-      validate?: never;
-    }
-  | {
-      validValues?: never;
-      validate: (value: State) => boolean;
-    }
-  | {
-      validValues?: undefined;
-      validate?: undefined;
-    };
+type RequireOneOrMore<T, Keys extends keyof T = keyof T> = Pick<
+  T,
+  Exclude<keyof T, Keys>
+> &
+  {
+    [K in Keys]-?: Required<Pick<T, K>> & Partial<Pick<T, Exclude<Keys, K>>>;
+  }[Keys];
+
+type RequireOneOrNone<T, Keys extends keyof T = keyof T> =
+  | Partial<Record<Keys, never>>
+  | RequireOneOrMore<T, Keys>;
+
+type RequireAllOrNone<T, Keys extends keyof T = keyof T> =
+  | Required<Pick<T, Keys>>
+  | Partial<Record<Keys, never>>;
+
+type KeyOptionsBase = {
+  queryKey: string;
+  sessionStorageKey: string;
+  localStorageKey: string;
+};
+type KeyOptions = Prettify<RequireOneOrMore<KeyOptionsBase>>;
+
+type ValidationOptionsBase<State> = {
+  validValues: readonly State[];
+  validate: (value: State) => boolean;
+};
+type ValidationOptions<State> = Prettify<
+  RequireOneOrNone<ValidationOptionsBase<State>>
+>;
 
 type ParseStoredValue<State> = (rawValue: string) => State | null;
 type SerializeStoredValue<State> = (value: State) => string;
 
-type ParseSerializeOptions<State> =
-  | {
-      parse: ParseStoredValue<State>;
-      serialize: SerializeStoredValue<State>;
-    }
-  | {
-      parse?: never;
-      serialize?: never;
-    };
+type ParseSerializeOptionsBase<State> = {
+  parse: ParseStoredValue<State>;
+  serialize: SerializeStoredValue<State>;
+};
+type ParseSerializeOptions<State> = Prettify<
+  RequireAllOrNone<ParseSerializeOptionsBase<State>>
+>;
 
 export type UseStoredStateOptions<State> = {
   defaultValue: State;
