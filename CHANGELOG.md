@@ -1,3 +1,10 @@
+# [1.2.0](https://github.com/MaximSrour/useStoredState/compare/v1.1.0...v1.2.0) (2026-02-22)
+
+
+### Features
+
+* add input validation ([c3f20fb](https://github.com/MaximSrour/useStoredState/commit/c3f20fb871abe326806fd393df5549e744657e22))
+
 # [1.1.0](https://github.com/MaximSrour/useStoredState/compare/v1.0.0...v1.1.0) (2026-02-22)
 
 
