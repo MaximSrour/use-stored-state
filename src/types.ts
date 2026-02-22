@@ -1,13 +1,16 @@
 export interface UseStoredStateOptions<State> {
-  initialState: State;
+  queryKey?: string;
+  defaultState: State;
 }
 
 export type UseStoredStateResult<State> = [State, (newState: State) => void];
 
-export interface UseKeyStoreOptions<State> {
-  defaultValue: State;
-  key: string;
+export interface UseKeyStoreOptions {
+  key: string | null;
   source: "query" | "sessionStorage" | "localStorage";
 }
 
-export type UseKeyStoreResult<State> = [State, (newState: State) => void];
+export type UseKeyStoreResult<State> = [
+  State | null,
+  (newState: State) => void,
+];

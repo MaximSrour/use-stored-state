@@ -40,14 +40,13 @@ describe("useKeyStore", () => {
   it("returns default value when query key is missing", () => {
     const { result } = renderHook(() => {
       return useKeyStore({
-        defaultValue: "default",
         key: "state",
         source: "query",
       });
     });
 
     const [state] = result.current;
-    expect(state).toBe("default");
+    expect(state).toBeNull();
   });
 
   it("loads value from query source", () => {
@@ -55,7 +54,6 @@ describe("useKeyStore", () => {
 
     const { result } = renderHook(() => {
       return useKeyStore({
-        defaultValue: "default",
         key: "state",
         source: "query",
       });
@@ -68,7 +66,6 @@ describe("useKeyStore", () => {
   it("updates query parameter when state changes", () => {
     const { result } = renderHook(() => {
       return useKeyStore({
-        defaultValue: "default",
         key: "state",
         source: "query",
       });
@@ -87,7 +84,6 @@ describe("useKeyStore", () => {
 
     const { result } = renderHook(() => {
       return useKeyStore({
-        defaultValue: "default",
         key: "state",
         source: "localStorage",
       });
@@ -100,7 +96,6 @@ describe("useKeyStore", () => {
   it("updates local storage when state changes", () => {
     const { result } = renderHook(() => {
       return useKeyStore({
-        defaultValue: "default",
         key: "state",
         source: "localStorage",
       });
@@ -119,7 +114,6 @@ describe("useKeyStore", () => {
 
     const { result } = renderHook(() => {
       return useKeyStore({
-        defaultValue: "default",
         key: "state",
         source: "sessionStorage",
       });
@@ -132,7 +126,6 @@ describe("useKeyStore", () => {
   it("updates session storage when state changes", () => {
     const { result } = renderHook(() => {
       return useKeyStore({
-        defaultValue: "default",
         key: "state",
         source: "sessionStorage",
       });
@@ -144,5 +137,23 @@ describe("useKeyStore", () => {
     });
 
     expect(window.sessionStorage.getItem("state")).toBe("next-session");
+  });
+
+  it("returns null and skips storage writes when key is null", () => {
+    const { result } = renderHook(() => {
+      return useKeyStore({
+        key: null,
+        source: "localStorage",
+      });
+    });
+
+    const [state, setState] = result.current;
+    expect(state).toBeNull();
+
+    act(() => {
+      setState("ignored");
+    });
+
+    expect(window.localStorage.getItem("state")).toBeNull();
   });
 });

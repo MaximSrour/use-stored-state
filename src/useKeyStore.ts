@@ -5,17 +5,20 @@ import { type UseKeyStoreOptions, type UseKeyStoreResult } from "./types";
 /**
  * Stores state by source/key pair.
  *
- * @param {UseKeyStoreOptions<State>} options - Hook options.
+ * @param {UseKeyStoreOptions} options - Hook options.
  * @returns {UseKeyStoreResult<State>} The same tuple shape as `useState`.
  */
 export function useKeyStore<State>({
-  defaultValue,
   key,
   source,
-}: UseKeyStoreOptions<State>): UseKeyStoreResult<State> {
-  const getStorageValue = (): State => {
+}: UseKeyStoreOptions): UseKeyStoreResult<State> {
+  const getStorageValue = () => {
+    if (key === null) {
+      return null;
+    }
+
     if (typeof window === "undefined") {
-      return defaultValue;
+      return null;
     }
 
     switch (source) {
@@ -23,25 +26,26 @@ export function useKeyStore<State>({
         const searchParams = new URLSearchParams(window.location.search);
         const queryValue = searchParams.get(key);
 
-        return queryValue === null ? defaultValue : (queryValue as State);
+        return queryValue as State;
       }
 
       case "localStorage": {
         const storageValue = window.localStorage.getItem(key);
-        return storageValue === null ? defaultValue : (storageValue as State);
+        return storageValue as State;
       }
 
       case "sessionStorage": {
         const storageValue = window.sessionStorage.getItem(key);
-        return storageValue === null ? defaultValue : (storageValue as State);
+        return storageValue as State;
       }
-
-      default:
-        return defaultValue;
     }
   };
 
   const setStorageValue = (value: State) => {
+    if (key === null) {
+      return;
+    }
+
     if (typeof window === "undefined") {
       return;
     }
@@ -68,7 +72,7 @@ export function useKeyStore<State>({
     }
   };
 
-  const [state, setBaseState] = useState<State>(getStorageValue);
+  const [state, setBaseState] = useState<State | null>(getStorageValue);
 
   const setState = (newState: State): void => {
     setBaseState(newState);
