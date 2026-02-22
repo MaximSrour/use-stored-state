@@ -346,6 +346,83 @@ describe("useStoredState", () => {
     expect(window.sessionStorage.getItem("count")).toBe("10");
   });
 
+  it("throws when no key is provided", () => {
+    const invalidOptions = {
+      defaultValue: "default",
+    } as unknown as UseStoredStateOptions<string>;
+
+    expect(() => {
+      renderHook(() => {
+        return useStoredState(invalidOptions);
+      });
+    }).toThrow(
+      "useStoredState requires at least one of queryKey, sessionStorageKey, or localStorageKey"
+    );
+  });
+
+  it("throws when both sessionStorageKey and localStorageKey are provided", () => {
+    const invalidOptions = {
+      defaultValue: "default",
+      localStorageKey: "state",
+      queryKey: "state",
+      sessionStorageKey: "state",
+    } as unknown as UseStoredStateOptions<string>;
+
+    expect(() => {
+      renderHook(() => {
+        return useStoredState(invalidOptions);
+      });
+    }).toThrow(
+      "useStoredState options must include only one of sessionStorageKey or localStorageKey"
+    );
+  });
+
+  it("throws when validValues and validate are both provided", () => {
+    const invalidOptions = {
+      defaultValue: "default",
+      queryKey: "state",
+      validValues: ["default"],
+      validate: (value: string) => {
+        return value.length > 0;
+      },
+    } as unknown as UseStoredStateOptions<string>;
+
+    expect(() => {
+      renderHook(() => {
+        return useStoredState(invalidOptions);
+      });
+    }).toThrow("Provide only one of validValues or validate");
+  });
+
+  it("throws when parse and serialize are not provided together", () => {
+    const invalidOptions = {
+      defaultValue: "default",
+      parse: (rawValue: string) => {
+        return rawValue;
+      },
+      queryKey: "state",
+    } as unknown as UseStoredStateOptions<string>;
+
+    expect(() => {
+      renderHook(() => {
+        return useStoredState(invalidOptions);
+      });
+    }).toThrow("parse and serialize must be provided together");
+  });
+
+  it("throws when queryKey is not a string", () => {
+    const invalidOptions = {
+      defaultValue: "default",
+      queryKey: 123,
+    } as unknown as UseStoredStateOptions<string>;
+
+    expect(() => {
+      renderHook(() => {
+        return useStoredState(invalidOptions);
+      });
+    }).toThrow("queryKey must be a string");
+  });
+
   it("enforces mutually exclusive storage keys at the type level", () => {
     // @ts-expect-error sessionStorageKey and localStorageKey are mutually exclusive.
     const _invalidOptions: UseStoredStateOptions<string> = {

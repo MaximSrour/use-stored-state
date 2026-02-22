@@ -4,6 +4,90 @@ import { type UseStoredStateOptions, type UseStoredStateResult } from "./types";
 import { useKeyStore } from "./useKeyStore";
 
 /**
+ * Validates the options provided to the `useStoredState` hook, ensuring that they meet the necessary requirements and constraints.
+ *
+ * @param {object} options - An object containing the options to validate.
+ * @param {unknown} options.localStorageKey - The local storage key option to validate.
+ * @param {unknown} options.parse - The parse function option to validate.
+ * @param {unknown} options.queryKey - The query key option to validate.
+ * @param {unknown} options.serialize - The serialize function option to validate.
+ * @param {unknown} options.sessionStorageKey - The session storage key option to validate.
+ * @param {unknown} options.validValues - The valid values option to validate.
+ * @param {unknown} options.validate - The validate function option to validate.
+ * @throws {Error} Will throw an error if the options are invalid or if there are conflicting options.
+ * @throws {TypeError} Will throw a type error if any of the options are of the wrong type.
+ */
+function validateUseStoredStateOptions({
+  localStorageKey,
+  parse,
+  queryKey,
+  serialize,
+  sessionStorageKey,
+  validValues,
+  validate,
+}: {
+  localStorageKey: unknown;
+  parse: unknown;
+  queryKey: unknown;
+  serialize: unknown;
+  sessionStorageKey: unknown;
+  validValues: unknown;
+  validate: unknown;
+}): void {
+  const hasQueryKey = queryKey !== undefined;
+  const hasSessionStorageKey = sessionStorageKey !== undefined;
+  const hasLocalStorageKey = localStorageKey !== undefined;
+
+  if (!hasQueryKey && !hasSessionStorageKey && !hasLocalStorageKey) {
+    throw new Error(
+      "useStoredState requires at least one of queryKey, sessionStorageKey, or localStorageKey"
+    );
+  }
+
+  if (hasSessionStorageKey && hasLocalStorageKey) {
+    throw new Error(
+      "useStoredState options must include only one of sessionStorageKey or localStorageKey"
+    );
+  }
+
+  if (hasQueryKey && typeof queryKey !== "string") {
+    throw new TypeError("queryKey must be a string");
+  }
+
+  if (hasSessionStorageKey && typeof sessionStorageKey !== "string") {
+    throw new TypeError("sessionStorageKey must be a string");
+  }
+
+  if (hasLocalStorageKey && typeof localStorageKey !== "string") {
+    throw new TypeError("localStorageKey must be a string");
+  }
+
+  if (validValues !== undefined && validate !== undefined) {
+    throw new Error("Provide only one of validValues or validate");
+  }
+
+  if (validValues !== undefined && !Array.isArray(validValues)) {
+    throw new TypeError("validValues must be an array");
+  }
+
+  if (validate !== undefined && typeof validate !== "function") {
+    throw new TypeError("validate must be a function");
+  }
+
+  if ((parse === undefined) !== (serialize === undefined)) {
+    throw new Error("parse and serialize must be provided together");
+  }
+
+  if (parse !== undefined && typeof parse !== "function") {
+    throw new TypeError("parse must be a function");
+  }
+
+  if (serialize !== undefined && typeof serialize !== "function") {
+    throw new TypeError("serialize must be a function");
+  }
+}
+
+/**
  * Parse a primitive value from a string, returning null if the value is invalid or cannot be parsed.
  *
  * @param {string} rawValue - The raw string value to parse.
@@ -44,7 +128,7 @@ function parsePrimitiveState<State>(
 }
 
 /**
- * Provides a stateful value that syncs with the URL query parameters and local storage.
+ * Provides a stateful value that syncs with URL query parameters and a single storage source.
  *
  * @param {UseStoredStateOptions<State>} options - An object containing options for the hook.
  * @param {string} options.queryKey - The key to use for syncing state with the URL query parameters.
@@ -56,7 +140,8 @@ function parsePrimitiveState<State>(
  * @param {ParseStoredValue<State>} options.parse - A function to parse a raw string value into the state type. If not provided, a default parser will be used for primitive types (boolean, number, string).
  * @param {SerializeStoredValue<State>} options.serialize - A function to serialize the state value into a string. If not provided, a default serializer will be used that converts the value to a string.
  * @returns {UseStoredStateResult<State>} The same tuple as `useState`.
- * @throws {Error} Will throw an error if `defaultValue` does not satisfy the validation criteria defined by `validValues` or `validate`.
+ * @throws {Error} Will throw an error for invalid options and when `defaultValue` fails validation.
+ * @throws {TypeError} Will throw a type error for options of the wrong type.
  */
 export function useStoredState<State>({
   queryKey,
@@ -68,6 +153,16 @@ export function useStoredState<State>({
   parse,
   serialize,
 }: UseStoredStateOptions<State>): UseStoredStateResult<State> {
+  validateUseStoredStateOptions({
+    localStorageKey,
+    parse,
+    queryKey,
+    serialize,
+    sessionStorageKey,
+    validValues,
+    validate,
+  });
+
   const parseValue =
     parse ??
     ((rawValue: string) => {

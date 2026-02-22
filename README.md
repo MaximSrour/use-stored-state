@@ -78,6 +78,7 @@ Rules:
 - `sessionStorageKey` and `localStorageKey` cannot be used together.
 - Use `validValues` or `validate` (not both).
 - If you pass `parse`, you must also pass `serialize` (and vice versa).
+- Invalid option combinations throw at runtime (including JavaScript-only usage).
 
 Returns:
 
