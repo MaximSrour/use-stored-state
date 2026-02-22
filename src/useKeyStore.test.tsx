@@ -1,5 +1,5 @@
-import { act, renderHook } from "@testing-library/react";
-import { beforeEach, describe, expect, it } from "vitest";
+import { act, cleanup, renderHook } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { useKeyStore } from "./useKeyStore";
 
@@ -35,6 +35,10 @@ describe("useKeyStore", () => {
       value: createStorageMock(),
       writable: true,
     });
+  });
+
+  afterEach(() => {
+    cleanup();
   });
 
   it("returns default value when query key is missing", () => {
@@ -77,6 +81,58 @@ describe("useKeyStore", () => {
     });
 
     expect(window.location.search).toBe("?state=next");
+  });
+
+  it("removes query parameter on unmount for query source", () => {
+    window.history.replaceState(null, "", "/?other=value");
+
+    const { result, unmount } = renderHook(() => {
+      return useKeyStore({
+        key: "state",
+        source: "query",
+      });
+    });
+
+    act(() => {
+      const [, setState] = result.current;
+      setState("next");
+    });
+
+    expect(window.location.search).toBe("?other=value&state=next");
+
+    unmount();
+
+    expect(window.location.search).toBe("?other=value");
+  });
+
+  it("keeps query parameter while another hook with same key remains mounted", () => {
+    const first = renderHook(() => {
+      return useKeyStore({
+        key: "state",
+        source: "query",
+      });
+    });
+    const second = renderHook(() => {
+      return useKeyStore({
+        key: "state",
+        source: "query",
+      });
+    });
+
+    act(() => {
+      const [, setState] = first.result.current;
+      setState("next");
+    });
+
+    expect(window.location.search).toBe("?state=next");
+
+    second.unmount();
+
+    expect(window.location.search).toBe("?state=next");
+
+    first.unmount();
+
+    expect(window.location.search).toBe("");
   });
 
   it("loads value from local storage source", () => {

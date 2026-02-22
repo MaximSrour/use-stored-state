@@ -1,6 +1,8 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { type UseKeyStoreOptions, type UseKeyStoreResult } from "./types";
+
+const activeQueryKeyInstances = new Map<string, Set<symbol>>();
 
 /**
  * Stores state by source/key pair.
@@ -14,6 +16,7 @@ export function useKeyStore<State>({
   parse,
   serialize,
 }: UseKeyStoreOptions<State>): UseKeyStoreResult<State> {
+  const queryKeyInstanceId = useRef(Symbol("queryKeyInstance"));
   const parseValue =
     parse ??
     ((rawValue: string) => {
@@ -96,6 +99,34 @@ export function useKeyStore<State>({
       }
     }
   };
+
+  useEffect(() => {
+    if (source !== "query" || key === null || typeof window === "undefined") {
+      return;
+    }
+
+    const instances = activeQueryKeyInstances.get(key) ?? new Set<symbol>();
+    instances.add(queryKeyInstanceId.current);
+    activeQueryKeyInstances.set(key, instances);
+
+    return () => {
+      const activeInstances = activeQueryKeyInstances.get(key);
+      if (activeInstances === undefined) {
+        return;
+      }
+
+      activeInstances.delete(queryKeyInstanceId.current);
+      if (activeInstances.size > 0) {
+        return;
+      }
+
+      activeQueryKeyInstances.delete(key);
+
+      const url = new URL(window.location.href);
+      url.searchParams.delete(key);
+      window.history.replaceState(window.history.state, "", url);
+    };
+  }, [key, source]);
 
   const [state, setBaseState] = useState<State | null>(getStorageValue);
 

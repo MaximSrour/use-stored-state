@@ -1,9 +1,7 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { type UseStoredStateOptions, type UseStoredStateResult } from "./types";
 import { useKeyStore } from "./useKeyStore";
-
-const activeQueryKeyInstances = new Map<string, Set<symbol>>();
 
 /**
  * Parse a primitive value from a string, returning null if the value is invalid or cannot be parsed.
@@ -137,7 +135,6 @@ export function useStoredState<State>({
     validatedLocalStorageState ??
     defaultValue;
   const [state, setBaseState] = useState<State>(initialState);
-  const queryKeyInstanceId = useRef(Symbol("queryKeyInstance"));
 
   const syncAllStores = useCallback(
     (value: State) => {
@@ -152,35 +149,6 @@ export function useStoredState<State>({
   useEffect(() => {
     syncAllStores(state);
   }, [state, syncAllStores]);
-
-  useEffect(() => {
-    if (queryKey === undefined || typeof window === "undefined") {
-      return;
-    }
-
-    const instances =
-      activeQueryKeyInstances.get(queryKey) ?? new Set<symbol>();
-    instances.add(queryKeyInstanceId.current);
-    activeQueryKeyInstances.set(queryKey, instances);
-
-    return () => {
-      const activeInstances = activeQueryKeyInstances.get(queryKey);
-      if (activeInstances === undefined) {
-        return;
-      }
-
-      activeInstances.delete(queryKeyInstanceId.current);
-      if (activeInstances.size > 0) {
-        return;
-      }
-
-      activeQueryKeyInstances.delete(queryKey);
-
-      const url = new URL(window.location.href);
-      url.searchParams.delete(queryKey);
-      window.history.replaceState(window.history.state, "", url);
-    };
-  }, [queryKey]);
 
   const setState = (newState: State): void => {
     if (!isValid(newState)) {
