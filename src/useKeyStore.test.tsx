@@ -1,4 +1,6 @@
 import { act, cleanup, renderHook } from "@testing-library/react";
+import { createElement } from "react";
+import { renderToString } from "react-dom/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { useKeyStore } from "./useKeyStore";
@@ -351,6 +353,87 @@ describe("useKeyStore", () => {
       expect(() => {
         unmount();
       }).not.toThrow();
+    });
+
+    it("does not track cleanup when query key is null", () => {
+      window.history.replaceState(null, "", "/?null=from-query&other=value");
+
+      const { unmount } = renderHook(() => {
+        return useKeyStore({
+          key: null,
+          source: "query",
+        });
+      });
+
+      unmount();
+
+      expect(window.location.search).toBe("?null=from-query&other=value");
+    });
+
+    it("re-registers query cleanup behavior when key changes", () => {
+      window.history.replaceState(null, "", "/?other=value");
+
+      const { result, rerender, unmount } = renderHook(
+        ({ key }: { key: string }) => {
+          return useKeyStore({
+            key,
+            source: "query",
+          });
+        },
+        {
+          initialProps: { key: "first" },
+        }
+      );
+
+      act(() => {
+        const [, setState] = result.current;
+        setState("value-1");
+      });
+
+      expect(window.location.search).toBe("?other=value&first=value-1");
+
+      rerender({ key: "second" });
+
+      expect(window.location.search).toBe("?other=value");
+
+      act(() => {
+        const [, setState] = result.current;
+        setState("value-2");
+      });
+
+      expect(window.location.search).toBe("?other=value&second=value-2");
+
+      unmount();
+
+      expect(window.location.search).toBe("?other=value");
+    });
+  });
+
+  describe("non-browser guard behavior", () => {
+    it("returns null during server render without window", () => {
+      const originalWindow = globalThis.window;
+      vi.stubGlobal("window", undefined);
+
+      let capturedState: string | null = "unexpected";
+
+      // eslint-disable-next-line jsdoc/require-jsdoc
+      function Probe() {
+        const [state] = useKeyStore<string>({
+          key: "state",
+          source: "localStorage",
+        });
+
+        capturedState = state;
+        return null;
+      }
+
+      expect(() => {
+        renderToString(createElement(Probe));
+      }).not.toThrow();
+
+      expect(capturedState).toBeNull();
+
+      vi.stubGlobal("window", originalWindow);
     });
   });
 });

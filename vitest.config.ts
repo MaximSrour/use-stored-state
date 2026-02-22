@@ -6,5 +6,11 @@ export default defineConfig({
       enabled: true,
     },
     environment: "jsdom",
+    exclude: [
+      "**/node_modules/**",
+      "**/dist/**",
+      "**/coverage/**",
+      ".stryker-tmp/**",
+    ],
   },
 });

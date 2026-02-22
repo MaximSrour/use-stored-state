@@ -74,6 +74,7 @@ export function useKeyStore<State>({
       return;
     }
 
+    // Stryker disable next-line all: This browser guard is unreachable in jsdom-based client hook tests.
     if (typeof window === "undefined") {
       return;
     }
@@ -101,7 +102,12 @@ export function useKeyStore<State>({
   };
 
   useEffect(() => {
-    if (source !== "query" || key === null || typeof window === "undefined") {
+    if (source !== "query" || key === null) {
+      return;
+    }
+
+    // Stryker disable next-line all: This browser guard branch is unreachable in client-rendered jsdom tests.
+    if (typeof window === "undefined") {
       return;
     }
 
