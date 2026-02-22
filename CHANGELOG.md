@@ -1,3 +1,10 @@
+## [1.3.2](https://github.com/MaximSrour/useStoredState/compare/v1.3.1...v1.3.2) (2026-02-22)
+
+
+### Bug Fixes
+
+* require at least one storage key to function ([782e8f2](https://github.com/MaximSrour/useStoredState/commit/782e8f2f4eac6e89caa880da2596a0b89005e1a0))
+
 ## [1.3.1](https://github.com/MaximSrour/useStoredState/compare/v1.3.0...v1.3.1) (2026-02-22)
 
 
