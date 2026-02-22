@@ -1,3 +1,11 @@
+## [1.3.3](https://github.com/MaximSrour/useStoredState/compare/v1.3.2...v1.3.3) (2026-02-22)
+
+
+### Bug Fixes
+
+* improve type safety when using parse and serialize options ([f5a6633](https://github.com/MaximSrour/useStoredState/commit/f5a66339fa18fc87439f75c2a1b4b0efddfa2433))
+* improve type wrangling for slightly improved error messages ([645919c](https://github.com/MaximSrour/useStoredState/commit/645919c4fe76a8a7fcc96c23df29090cc1b52ba0))
+
 ## [1.3.2](https://github.com/MaximSrour/useStoredState/compare/v1.3.1...v1.3.2) (2026-02-22)
 
 
