@@ -43,306 +43,314 @@ describe("useKeyStore", () => {
     vi.unstubAllGlobals();
   });
 
-  it("returns default value when query key is missing", () => {
-    const { result } = renderHook(() => {
-      return useKeyStore({
-        key: "state",
-        source: "query",
+  describe("read guards", () => {
+    it("returns null when query key is missing", () => {
+      const { result } = renderHook(() => {
+        return useKeyStore({
+          key: "state",
+          source: "query",
+        });
       });
+
+      const [state] = result.current;
+      expect(state).toBeNull();
     });
 
-    const [state] = result.current;
-    expect(state).toBeNull();
+    it("does not read storage when key is null", () => {
+      const getItemSpy = vi.spyOn(window.localStorage, "getItem");
+      const parse = vi.fn((rawValue: string) => {
+        return rawValue.toUpperCase();
+      });
+
+      const { result } = renderHook(() => {
+        return useKeyStore<string>({
+          key: null,
+          parse,
+          source: "localStorage",
+        });
+      });
+
+      const [state] = result.current;
+      expect(state).toBeNull();
+      expect(getItemSpy).not.toHaveBeenCalled();
+      expect(parse).not.toHaveBeenCalled();
+    });
+
+    it("returns null and skips storage writes when key is null", () => {
+      const { result } = renderHook(() => {
+        return useKeyStore({
+          key: null,
+          source: "localStorage",
+        });
+      });
+
+      const [state, setState] = result.current;
+      expect(state).toBeNull();
+
+      act(() => {
+        setState("ignored");
+      });
+
+      expect(window.localStorage.getItem("state")).toBeNull();
+    });
+
+    it("does not parse when local storage key is missing", () => {
+      const parse = vi.fn((rawValue: string) => {
+        return rawValue.toUpperCase();
+      });
+
+      const { result } = renderHook(() => {
+        return useKeyStore<string>({
+          key: "missing",
+          parse,
+          source: "localStorage",
+        });
+      });
+
+      const [state] = result.current;
+      expect(state).toBeNull();
+      expect(parse).not.toHaveBeenCalled();
+    });
   });
 
-  it("loads value from query source", () => {
-    window.history.replaceState(null, "", "/?state=from-query");
+  describe("hydration from existing values", () => {
+    it("loads value from query source", () => {
+      window.history.replaceState(null, "", "/?state=from-query");
 
-    const { result } = renderHook(() => {
-      return useKeyStore({
-        key: "state",
-        source: "query",
+      const { result } = renderHook(() => {
+        return useKeyStore({
+          key: "state",
+          source: "query",
+        });
       });
+
+      const [state] = result.current;
+      expect(state).toBe("from-query");
     });
 
-    const [state] = result.current;
-    expect(state).toBe("from-query");
+    it("loads value from session storage source", () => {
+      window.sessionStorage.setItem("state", "from-session");
+
+      const { result } = renderHook(() => {
+        return useKeyStore({
+          key: "state",
+          source: "sessionStorage",
+        });
+      });
+
+      const [state] = result.current;
+      expect(state).toBe("from-session");
+    });
+
+    it("loads value from local storage source", () => {
+      window.localStorage.setItem("state", "from-local");
+
+      const { result } = renderHook(() => {
+        return useKeyStore({
+          key: "state",
+          source: "localStorage",
+        });
+      });
+
+      const [state] = result.current;
+      expect(state).toBe("from-local");
+    });
   });
 
-  it("updates query parameter when state changes", () => {
-    const { result } = renderHook(() => {
-      return useKeyStore({
-        key: "state",
-        source: "query",
+  describe("state updates write to the selected source", () => {
+    it("updates query parameter when state changes", () => {
+      const { result } = renderHook(() => {
+        return useKeyStore({
+          key: "state",
+          source: "query",
+        });
       });
+
+      act(() => {
+        const [, setState] = result.current;
+        setState("next");
+      });
+
+      expect(window.location.search).toBe("?state=next");
     });
 
-    act(() => {
-      const [, setState] = result.current;
-      setState("next");
+    it("updates session storage when state changes", () => {
+      const { result } = renderHook(() => {
+        return useKeyStore({
+          key: "state",
+          source: "sessionStorage",
+        });
+      });
+
+      act(() => {
+        const [, setState] = result.current;
+        setState("next-session");
+      });
+
+      expect(window.sessionStorage.getItem("state")).toBe("next-session");
     });
 
-    expect(window.location.search).toBe("?state=next");
+    it("updates local storage when state changes", () => {
+      const { result } = renderHook(() => {
+        return useKeyStore({
+          key: "state",
+          source: "localStorage",
+        });
+      });
+
+      act(() => {
+        const [, setState] = result.current;
+        setState("next-local");
+      });
+
+      expect(window.localStorage.getItem("state")).toBe("next-local");
+    });
   });
 
-  it("removes query parameter on unmount for query source", () => {
-    window.history.replaceState(null, "", "/?other=value");
+  describe("query lifecycle cleanup", () => {
+    it("uses empty history title when updating query params", () => {
+      const replaceStateSpy = vi.spyOn(window.history, "replaceState");
 
-    const { result, unmount } = renderHook(() => {
-      return useKeyStore({
-        key: "state",
-        source: "query",
+      const { result } = renderHook(() => {
+        return useKeyStore({
+          key: "state",
+          source: "query",
+        });
       });
-    });
 
-    act(() => {
-      const [, setState] = result.current;
-      setState("next");
-    });
-
-    expect(window.location.search).toBe("?other=value&state=next");
-
-    unmount();
-
-    expect(window.location.search).toBe("?other=value");
-  });
-
-  it("keeps query parameter while another hook with same key remains mounted", () => {
-    const first = renderHook(() => {
-      return useKeyStore({
-        key: "state",
-        source: "query",
+      act(() => {
+        const [, setState] = result.current;
+        setState("next");
       });
+
+      expect(replaceStateSpy).toHaveBeenCalledWith(
+        window.history.state,
+        "",
+        expect.any(URL)
+      );
     });
-    const second = renderHook(() => {
-      return useKeyStore({
-        key: "state",
-        source: "query",
+
+    it("removes query parameter on unmount for query source", () => {
+      window.history.replaceState(null, "", "/?other=value");
+
+      const { result, unmount } = renderHook(() => {
+        return useKeyStore({
+          key: "state",
+          source: "query",
+        });
       });
-    });
 
-    act(() => {
-      const [, setState] = first.result.current;
-      setState("next");
-    });
-
-    expect(window.location.search).toBe("?state=next");
-
-    second.unmount();
-
-    expect(window.location.search).toBe("?state=next");
-
-    first.unmount();
-
-    expect(window.location.search).toBe("");
-  });
-
-  it("loads value from local storage source", () => {
-    window.localStorage.setItem("state", "from-local");
-
-    const { result } = renderHook(() => {
-      return useKeyStore({
-        key: "state",
-        source: "localStorage",
+      act(() => {
+        const [, setState] = result.current;
+        setState("next");
       });
-    });
 
-    const [state] = result.current;
-    expect(state).toBe("from-local");
-  });
+      expect(window.location.search).toBe("?other=value&state=next");
 
-  it("updates local storage when state changes", () => {
-    const { result } = renderHook(() => {
-      return useKeyStore({
-        key: "state",
-        source: "localStorage",
-      });
-    });
-
-    act(() => {
-      const [, setState] = result.current;
-      setState("next-local");
-    });
-
-    expect(window.localStorage.getItem("state")).toBe("next-local");
-  });
-
-  it("loads value from session storage source", () => {
-    window.sessionStorage.setItem("state", "from-session");
-
-    const { result } = renderHook(() => {
-      return useKeyStore({
-        key: "state",
-        source: "sessionStorage",
-      });
-    });
-
-    const [state] = result.current;
-    expect(state).toBe("from-session");
-  });
-
-  it("updates session storage when state changes", () => {
-    const { result } = renderHook(() => {
-      return useKeyStore({
-        key: "state",
-        source: "sessionStorage",
-      });
-    });
-
-    act(() => {
-      const [, setState] = result.current;
-      setState("next-session");
-    });
-
-    expect(window.sessionStorage.getItem("state")).toBe("next-session");
-  });
-
-  it("returns null and skips storage writes when key is null", () => {
-    const { result } = renderHook(() => {
-      return useKeyStore({
-        key: null,
-        source: "localStorage",
-      });
-    });
-
-    const [state, setState] = result.current;
-    expect(state).toBeNull();
-
-    act(() => {
-      setState("ignored");
-    });
-
-    expect(window.localStorage.getItem("state")).toBeNull();
-  });
-
-  it("does not read storage when key is null", () => {
-    const getItemSpy = vi.spyOn(window.localStorage, "getItem");
-    const parse = vi.fn((rawValue: string) => {
-      return rawValue.toUpperCase();
-    });
-
-    const { result } = renderHook(() => {
-      return useKeyStore<string>({
-        key: null,
-        parse,
-        source: "localStorage",
-      });
-    });
-
-    const [state] = result.current;
-    expect(state).toBeNull();
-    expect(getItemSpy).not.toHaveBeenCalled();
-    expect(parse).not.toHaveBeenCalled();
-  });
-
-  it("does not parse when local storage key is missing", () => {
-    const parse = vi.fn((rawValue: string) => {
-      return rawValue.toUpperCase();
-    });
-
-    const { result } = renderHook(() => {
-      return useKeyStore<string>({
-        key: "missing",
-        parse,
-        source: "localStorage",
-      });
-    });
-
-    const [state] = result.current;
-    expect(state).toBeNull();
-    expect(parse).not.toHaveBeenCalled();
-  });
-
-  it("does not clean query params for non-query sources on unmount", () => {
-    window.history.replaceState(null, "", "/?other=value&state=from-query");
-
-    const { unmount } = renderHook(() => {
-      return useKeyStore({
-        key: "state",
-        source: "localStorage",
-      });
-    });
-
-    unmount();
-
-    expect(window.location.search).toBe("?other=value&state=from-query");
-  });
-
-  it("uses empty history title when updating query params", () => {
-    const replaceStateSpy = vi.spyOn(window.history, "replaceState");
-
-    const { result } = renderHook(() => {
-      return useKeyStore({
-        key: "state",
-        source: "query",
-      });
-    });
-
-    act(() => {
-      const [, setState] = result.current;
-      setState("next");
-    });
-
-    expect(replaceStateSpy).toHaveBeenCalledWith(
-      window.history.state,
-      "",
-      expect.any(URL)
-    );
-  });
-
-  it("uses empty history title when removing query params on cleanup", () => {
-    const replaceStateSpy = vi.spyOn(window.history, "replaceState");
-
-    const { result, unmount } = renderHook(() => {
-      return useKeyStore({
-        key: "state",
-        source: "query",
-      });
-    });
-
-    act(() => {
-      const [, setState] = result.current;
-      setState("next");
-    });
-
-    replaceStateSpy.mockClear();
-    unmount();
-
-    expect(replaceStateSpy).toHaveBeenCalledWith(
-      window.history.state,
-      "",
-      expect.any(URL)
-    );
-  });
-
-  it("handles missing active query instance set during cleanup", () => {
-    const getSpy = vi.spyOn(Map.prototype, "get");
-
-    getSpy.mockImplementation(function (
-      this: Map<unknown, unknown>,
-      key: unknown
-    ): unknown {
-      if (key === "state") {
-        return undefined;
-      }
-
-      return Map.prototype.get.call(this, key);
-    });
-
-    const { result, unmount } = renderHook(() => {
-      return useKeyStore({
-        key: "state",
-        source: "query",
-      });
-    });
-
-    act(() => {
-      const [, setState] = result.current;
-      setState("next");
-    });
-
-    expect(() => {
       unmount();
-    }).not.toThrow();
+
+      expect(window.location.search).toBe("?other=value");
+    });
+
+    it("keeps query parameter while another hook with same key remains mounted", () => {
+      const first = renderHook(() => {
+        return useKeyStore({
+          key: "state",
+          source: "query",
+        });
+      });
+      const second = renderHook(() => {
+        return useKeyStore({
+          key: "state",
+          source: "query",
+        });
+      });
+
+      act(() => {
+        const [, setState] = first.result.current;
+        setState("next");
+      });
+
+      expect(window.location.search).toBe("?state=next");
+
+      second.unmount();
+
+      expect(window.location.search).toBe("?state=next");
+
+      first.unmount();
+
+      expect(window.location.search).toBe("");
+    });
+
+    it("does not clean query params for non-query sources on unmount", () => {
+      window.history.replaceState(null, "", "/?other=value&state=from-query");
+
+      const { unmount } = renderHook(() => {
+        return useKeyStore({
+          key: "state",
+          source: "localStorage",
+        });
+      });
+
+      unmount();
+
+      expect(window.location.search).toBe("?other=value&state=from-query");
+    });
+
+    it("uses empty history title when removing query params on cleanup", () => {
+      const replaceStateSpy = vi.spyOn(window.history, "replaceState");
+
+      const { result, unmount } = renderHook(() => {
+        return useKeyStore({
+          key: "state",
+          source: "query",
+        });
+      });
+
+      act(() => {
+        const [, setState] = result.current;
+        setState("next");
+      });
+
+      replaceStateSpy.mockClear();
+      unmount();
+
+      expect(replaceStateSpy).toHaveBeenCalledWith(
+        window.history.state,
+        "",
+        expect.any(URL)
+      );
+    });
+
+    it("handles missing active query instance set during cleanup", () => {
+      const getSpy = vi.spyOn(Map.prototype, "get");
+
+      getSpy.mockImplementation(function (
+        this: Map<unknown, unknown>,
+        key: unknown
+      ): unknown {
+        if (key === "state") {
+          return undefined;
+        }
+
+        return Map.prototype.get.call(this, key);
+      });
+
+      const { result, unmount } = renderHook(() => {
+        return useKeyStore({
+          key: "state",
+          source: "query",
+        });
+      });
+
+      act(() => {
+        const [, setState] = result.current;
+        setState("next");
+      });
+
+      expect(() => {
+        unmount();
+      }).not.toThrow();
+    });
   });
 });
