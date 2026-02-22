@@ -1,4 +1,21 @@
-type UseStoredStateValidationOptions<State> =
+type KeyOptions =
+  | {
+      queryKey: string;
+      sessionStorageKey?: string;
+      localStorageKey?: string;
+    }
+  | {
+      queryKey?: string;
+      sessionStorageKey: string;
+      localStorageKey?: string;
+    }
+  | {
+      queryKey?: string;
+      sessionStorageKey?: string;
+      localStorageKey: string;
+    };
+
+type ValidationOptions<State> =
   | {
       validValues: readonly State[];
       validate?: never;
@@ -11,18 +28,15 @@ type UseStoredStateValidationOptions<State> =
       validValues?: undefined;
       validate?: undefined;
     };
-
 type ParseStoredValue<State> = (rawValue: string) => State | null;
 type SerializeStoredValue<State> = (value: State) => string;
 
 export type UseStoredStateOptions<State> = {
-  queryKey?: string;
-  sessionStorageKey?: string;
-  localStorageKey?: string;
   defaultValue: State;
   parse?: ParseStoredValue<State>;
   serialize?: SerializeStoredValue<State>;
-} & UseStoredStateValidationOptions<State>;
+} & KeyOptions &
+  ValidationOptions<State>;
 
 export type UseStoredStateResult<State> = [State, (newState: State) => void];
 

@@ -269,29 +269,6 @@ describe("useStoredState", () => {
     expect(window.location.search).toBe("");
   });
 
-  it("keeps in-memory state when keys are omitted", () => {
-    window.history.replaceState(null, "", "/?state=from-query");
-    window.sessionStorage.setItem("state", "from-session");
-    window.localStorage.setItem("state", "from-local");
-
-    const { result } = renderHook(() => {
-      return useStoredState({ defaultValue: "default" });
-    });
-
-    const [initialState, setState] = result.current;
-    expect(initialState).toBe("default");
-
-    act(() => {
-      setState("next");
-    });
-
-    const [state] = result.current;
-    expect(state).toBe("next");
-    expect(window.location.search).toBe("?state=from-query");
-    expect(window.sessionStorage.getItem("state")).toBe("from-session");
-    expect(window.localStorage.getItem("state")).toBe("from-local");
-  });
-
   it("ignores invalid persisted values from validValues and falls back to default", () => {
     window.history.replaceState(null, "", "/?mode=invalid");
     window.sessionStorage.setItem("mode", "also-invalid");

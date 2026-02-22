@@ -57,13 +57,27 @@ function Example() {
 
 ```ts
 type UseStoredStateOptions<State> = {
-  queryKey?: string;
-  sessionStorageKey?: string;
-  localStorageKey?: string;
   defaultValue: State;
   parse?: (rawValue: string) => State | null;
   serialize?: (value: State) => string;
 } & (
+  | {
+      queryKey: string;
+      sessionStorageKey?: string;
+      localStorageKey?: string;
+    }
+  | {
+      queryKey?: string;
+      sessionStorageKey: string;
+      localStorageKey?: string;
+    }
+  | {
+      queryKey?: string;
+      sessionStorageKey?: string;
+      localStorageKey: string;
+    }
+) &
+  (
   | { validValues: readonly State[]; validate?: never }
   | { validValues?: never; validate: (value: State) => boolean }
   | { validValues?: undefined; validate?: undefined }
@@ -95,7 +109,8 @@ Invalid hydrated values are ignored when `validValues` or `validate` is used.
 
 - On mount and on each valid state update, the hook syncs current state to all
   configured stores.
-- If a key is omitted, that store is not read or written.
+- At least one key is required.
+- Any omitted store key is not read or written.
 
 ### Query param lifecycle
 
