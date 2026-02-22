@@ -1,5 +1,7 @@
 export interface UseStoredStateOptions<State> {
   queryKey?: string;
+  sessionStorageKey?: string;
+  localStorageKey?: string;
   defaultState: State;
 }
 

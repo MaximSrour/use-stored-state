@@ -94,8 +94,5 @@
     "parserOptions": {
       "project": "./tsconfig.eslint.json"
     }
-  },
-  "dependencies": {
-    "react-router-dom": "^7.13.0"
   }
 }
