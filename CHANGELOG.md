@@ -1,3 +1,10 @@
+## [1.3.1](https://github.com/MaximSrour/useStoredState/compare/v1.3.0...v1.3.1) (2026-02-22)
+
+
+### Bug Fixes
+
+* rename defaultState to defaultValue in useStoredState for consistency ([1d52e11](https://github.com/MaximSrour/useStoredState/commit/1d52e1135f833ff17c72a68531209d9b72af8609))
+
 # [1.3.0](https://github.com/MaximSrour/useStoredState/compare/v1.2.0...v1.3.0) (2026-02-22)
 
 
