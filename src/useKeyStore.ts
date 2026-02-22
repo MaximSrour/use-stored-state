@@ -11,7 +11,20 @@ import { type UseKeyStoreOptions, type UseKeyStoreResult } from "./types";
 export function useKeyStore<State>({
   key,
   source,
-}: UseKeyStoreOptions): UseKeyStoreResult<State> {
+  parse,
+  serialize,
+}: UseKeyStoreOptions<State>): UseKeyStoreResult<State> {
+  const parseValue =
+    parse ??
+    ((rawValue: string) => {
+      return rawValue as State;
+    });
+  const serializeValue =
+    serialize ??
+    ((value: State) => {
+      return String(value);
+    });
+
   const getStorageValue = () => {
     if (key === null) {
       return null;
@@ -26,17 +39,29 @@ export function useKeyStore<State>({
         const searchParams = new URLSearchParams(window.location.search);
         const queryValue = searchParams.get(key);
 
-        return queryValue as State;
+        if (queryValue === null) {
+          return null;
+        }
+
+        return parseValue(queryValue);
       }
 
       case "localStorage": {
         const storageValue = window.localStorage.getItem(key);
-        return storageValue as State;
+        if (storageValue === null) {
+          return null;
+        }
+
+        return parseValue(storageValue);
       }
 
       case "sessionStorage": {
         const storageValue = window.sessionStorage.getItem(key);
-        return storageValue as State;
+        if (storageValue === null) {
+          return null;
+        }
+
+        return parseValue(storageValue);
       }
     }
   };
@@ -50,7 +75,7 @@ export function useKeyStore<State>({
       return;
     }
 
-    const stringValue = String(value);
+    const stringValue = serializeValue(value);
 
     switch (source) {
       case "query": {

@@ -160,4 +160,101 @@ describe("useStoredState", () => {
     expect(window.sessionStorage.getItem("state")).toBe("from-session");
     expect(window.localStorage.getItem("state")).toBe("from-local");
   });
+
+  it("ignores invalid persisted values from validValues and falls back to default", () => {
+    window.history.replaceState(null, "", "/?mode=invalid");
+    window.sessionStorage.setItem("mode", "also-invalid");
+    window.localStorage.setItem("mode", "from-local");
+
+    const { result } = renderHook(() => {
+      return useStoredState({
+        defaultState: "default",
+        localStorageKey: "mode",
+        queryKey: "mode",
+        sessionStorageKey: "mode",
+        validValues: ["default", "from-local", "from-query"] as const,
+      });
+    });
+
+    const [state] = result.current;
+    expect(state).toBe("from-local");
+    expect(window.location.search).toBe("?mode=from-local");
+    expect(window.sessionStorage.getItem("mode")).toBe("from-local");
+    expect(window.localStorage.getItem("mode")).toBe("from-local");
+  });
+
+  it("uses custom validate function for hydrated values", () => {
+    window.history.replaceState(null, "", "/?count=7");
+    window.sessionStorage.setItem("count", "8");
+    window.localStorage.setItem("count", "4");
+
+    const { result } = renderHook(() => {
+      return useStoredState({
+        defaultState: 2,
+        localStorageKey: "count",
+        queryKey: "count",
+        sessionStorageKey: "count",
+        validate: (value) => {
+          return value % 2 === 0;
+        },
+      });
+    });
+
+    const [state] = result.current;
+    expect(state).toBe(8);
+    expect(window.location.search).toBe("?count=8");
+    expect(window.sessionStorage.getItem("count")).toBe("8");
+    expect(window.localStorage.getItem("count")).toBe("8");
+  });
+
+  it("parses and syncs boolean values", () => {
+    window.history.replaceState(null, "", "/?enabled=true");
+
+    const { result } = renderHook(() => {
+      return useStoredState({
+        defaultState: false,
+        localStorageKey: "enabled",
+        queryKey: "enabled",
+        sessionStorageKey: "enabled",
+      });
+    });
+
+    const [state, setState] = result.current;
+    expect(state).toBe(true);
+    expect(window.sessionStorage.getItem("enabled")).toBe("true");
+    expect(window.localStorage.getItem("enabled")).toBe("true");
+
+    act(() => {
+      setState(false);
+    });
+
+    expect(window.location.search).toBe("?enabled=false");
+    expect(window.sessionStorage.getItem("enabled")).toBe("false");
+    expect(window.localStorage.getItem("enabled")).toBe("false");
+  });
+
+  it("does not persist invalid updates from validate function", () => {
+    const { result } = renderHook(() => {
+      return useStoredState({
+        defaultState: 10,
+        localStorageKey: "count",
+        queryKey: "count",
+        sessionStorageKey: "count",
+        validate: (value) => {
+          return value >= 0 && value <= 100;
+        },
+      });
+    });
+
+    act(() => {
+      const [, setState] = result.current;
+      setState(120);
+    });
+
+    const [state] = result.current;
+    expect(state).toBe(10);
+    expect(window.location.search).toBe("?count=10");
+    expect(window.sessionStorage.getItem("count")).toBe("10");
+    expect(window.localStorage.getItem("count")).toBe("10");
+  });
 });
