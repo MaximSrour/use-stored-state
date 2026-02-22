@@ -1,3 +1,10 @@
+## [1.3.4](https://github.com/MaximSrour/useStoredState/compare/v1.3.3...v1.3.4) (2026-02-22)
+
+
+### Bug Fixes
+
+* upgrade package versions ([306f7fa](https://github.com/MaximSrour/useStoredState/commit/306f7faae0b9280c8cf3d6b121ed9d8d211c89f5))
+
 ## [1.3.3](https://github.com/MaximSrour/useStoredState/compare/v1.3.2...v1.3.3) (2026-02-22)
 
 
