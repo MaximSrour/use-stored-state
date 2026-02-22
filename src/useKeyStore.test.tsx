@@ -215,6 +215,106 @@ describe("useKeyStore", () => {
     expect(window.localStorage.getItem("state")).toBeNull();
   });
 
+  it("does not read storage when key is null", () => {
+    const getItemSpy = vi.spyOn(window.localStorage, "getItem");
+    const parse = vi.fn((rawValue: string) => {
+      return rawValue.toUpperCase();
+    });
+
+    const { result } = renderHook(() => {
+      return useKeyStore<string>({
+        key: null,
+        parse,
+        source: "localStorage",
+      });
+    });
+
+    const [state] = result.current;
+    expect(state).toBeNull();
+    expect(getItemSpy).not.toHaveBeenCalled();
+    expect(parse).not.toHaveBeenCalled();
+  });
+
+  it("does not parse when local storage key is missing", () => {
+    const parse = vi.fn((rawValue: string) => {
+      return rawValue.toUpperCase();
+    });
+
+    const { result } = renderHook(() => {
+      return useKeyStore<string>({
+        key: "missing",
+        parse,
+        source: "localStorage",
+      });
+    });
+
+    const [state] = result.current;
+    expect(state).toBeNull();
+    expect(parse).not.toHaveBeenCalled();
+  });
+
+  it("does not clean query params for non-query sources on unmount", () => {
+    window.history.replaceState(null, "", "/?other=value&state=from-query");
+
+    const { unmount } = renderHook(() => {
+      return useKeyStore({
+        key: "state",
+        source: "localStorage",
+      });
+    });
+
+    unmount();
+
+    expect(window.location.search).toBe("?other=value&state=from-query");
+  });
+
+  it("uses empty history title when updating query params", () => {
+    const replaceStateSpy = vi.spyOn(window.history, "replaceState");
+
+    const { result } = renderHook(() => {
+      return useKeyStore({
+        key: "state",
+        source: "query",
+      });
+    });
+
+    act(() => {
+      const [, setState] = result.current;
+      setState("next");
+    });
+
+    expect(replaceStateSpy).toHaveBeenCalledWith(
+      window.history.state,
+      "",
+      expect.any(URL)
+    );
+  });
+
+  it("uses empty history title when removing query params on cleanup", () => {
+    const replaceStateSpy = vi.spyOn(window.history, "replaceState");
+
+    const { result, unmount } = renderHook(() => {
+      return useKeyStore({
+        key: "state",
+        source: "query",
+      });
+    });
+
+    act(() => {
+      const [, setState] = result.current;
+      setState("next");
+    });
+
+    replaceStateSpy.mockClear();
+    unmount();
+
+    expect(replaceStateSpy).toHaveBeenCalledWith(
+      window.history.state,
+      "",
+      expect.any(URL)
+    );
+  });
+
   it("handles missing active query instance set during cleanup", () => {
     const getSpy = vi.spyOn(Map.prototype, "get");
 
