@@ -1,5 +1,5 @@
 import { act, cleanup, renderHook } from "@testing-library/react";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { useKeyStore } from "./useKeyStore";
 
@@ -39,6 +39,8 @@ describe("useKeyStore", () => {
 
   afterEach(() => {
     cleanup();
+    vi.restoreAllMocks();
+    vi.unstubAllGlobals();
   });
 
   it("returns default value when query key is missing", () => {
@@ -211,5 +213,36 @@ describe("useKeyStore", () => {
     });
 
     expect(window.localStorage.getItem("state")).toBeNull();
+  });
+
+  it("handles missing active query instance set during cleanup", () => {
+    const getSpy = vi.spyOn(Map.prototype, "get");
+
+    getSpy.mockImplementation(function (
+      this: Map<unknown, unknown>,
+      key: unknown
+    ): unknown {
+      if (key === "state") {
+        return undefined;
+      }
+
+      return Map.prototype.get.call(this, key);
+    });
+
+    const { result, unmount } = renderHook(() => {
+      return useKeyStore({
+        key: "state",
+        source: "query",
+      });
+    });
+
+    act(() => {
+      const [, setState] = result.current;
+      setState("next");
+    });
+
+    expect(() => {
+      unmount();
+    }).not.toThrow();
   });
 });

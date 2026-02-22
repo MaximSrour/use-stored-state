@@ -121,6 +121,21 @@ describe("useStoredState", () => {
     expect(window.sessionStorage.getItem("state")).toBe("default");
   });
 
+  it("supports storage-only usage without query key", () => {
+    window.sessionStorage.setItem("state", "from-session");
+
+    const { result } = renderHook(() => {
+      return useStoredState({
+        defaultValue: "default",
+        sessionStorageKey: "state",
+      });
+    });
+
+    const [state] = result.current;
+    expect(state).toBe("from-session");
+    expect(window.location.search).toBe("");
+  });
+
   it("fills query param on initial mount in StrictMode", () => {
     // eslint-disable-next-line jsdoc/require-jsdoc
     function Wrapper() {
@@ -433,5 +448,174 @@ describe("useStoredState", () => {
     };
 
     expect(true).toBe(true);
+  });
+
+  it("throws when sessionStorageKey is not a string", () => {
+    const invalidOptions = {
+      defaultValue: "default",
+      queryKey: "state",
+      sessionStorageKey: 123,
+    } as unknown as UseStoredStateOptions<string>;
+
+    expect(() => {
+      renderHook(() => {
+        return useStoredState(invalidOptions);
+      });
+    }).toThrow("sessionStorageKey must be a string");
+  });
+
+  it("throws when localStorageKey is not a string", () => {
+    const invalidOptions = {
+      defaultValue: "default",
+      localStorageKey: 123,
+      queryKey: "state",
+    } as unknown as UseStoredStateOptions<string>;
+
+    expect(() => {
+      renderHook(() => {
+        return useStoredState(invalidOptions);
+      });
+    }).toThrow("localStorageKey must be a string");
+  });
+
+  it("throws when validValues is not an array", () => {
+    const invalidOptions = {
+      defaultValue: "default",
+      queryKey: "state",
+      validValues: "default",
+    } as unknown as UseStoredStateOptions<string>;
+
+    expect(() => {
+      renderHook(() => {
+        return useStoredState(invalidOptions);
+      });
+    }).toThrow("validValues must be an array");
+  });
+
+  it("throws when validate is not a function", () => {
+    const invalidOptions = {
+      defaultValue: "default",
+      queryKey: "state",
+      validate: "yes",
+    } as unknown as UseStoredStateOptions<string>;
+
+    expect(() => {
+      renderHook(() => {
+        return useStoredState(invalidOptions);
+      });
+    }).toThrow("validate must be a function");
+  });
+
+  it("throws when parse is not a function", () => {
+    const invalidOptions = {
+      defaultValue: "default",
+      parse: true,
+      queryKey: "state",
+      serialize: (value: string) => {
+        return value;
+      },
+    } as unknown as UseStoredStateOptions<string>;
+
+    expect(() => {
+      renderHook(() => {
+        return useStoredState(invalidOptions);
+      });
+    }).toThrow("parse must be a function");
+  });
+
+  it("throws when serialize is not a function", () => {
+    const invalidOptions = {
+      defaultValue: "default",
+      parse: (rawValue: string) => {
+        return rawValue;
+      },
+      queryKey: "state",
+      serialize: true,
+    } as unknown as UseStoredStateOptions<string>;
+
+    expect(() => {
+      renderHook(() => {
+        return useStoredState(invalidOptions);
+      });
+    }).toThrow("serialize must be a function");
+  });
+
+  it("throws when defaultValue does not satisfy validation", () => {
+    expect(() => {
+      renderHook(() => {
+        return useStoredState({
+          defaultValue: "default",
+          queryKey: "state",
+          validValues: ["allowed"] as const,
+        });
+      });
+    }).toThrow("defaultValue must satisfy useStoredState validation");
+  });
+
+  it("parses false boolean values", () => {
+    window.history.replaceState(null, "", "/?enabled=false");
+
+    const { result } = renderHook(() => {
+      return useStoredState({
+        defaultValue: true,
+        queryKey: "enabled",
+        sessionStorageKey: "enabled",
+      });
+    });
+
+    const [state] = result.current;
+    expect(state).toBe(false);
+    expect(window.sessionStorage.getItem("enabled")).toBe("false");
+  });
+
+  it("falls back to default for invalid boolean query values", () => {
+    window.history.replaceState(null, "", "/?enabled=not-boolean");
+
+    const { result } = renderHook(() => {
+      return useStoredState({
+        defaultValue: true,
+        queryKey: "enabled",
+        sessionStorageKey: "enabled",
+      });
+    });
+
+    const [state] = result.current;
+    expect(state).toBe(true);
+    expect(window.location.search).toBe("?enabled=true");
+    expect(window.sessionStorage.getItem("enabled")).toBe("true");
+  });
+
+  it("falls back to default for invalid number query values", () => {
+    window.history.replaceState(null, "", "/?count=not-a-number");
+
+    const { result } = renderHook(() => {
+      return useStoredState({
+        defaultValue: 10,
+        queryKey: "count",
+        sessionStorageKey: "count",
+      });
+    });
+
+    const [state] = result.current;
+    expect(state).toBe(10);
+    expect(window.location.search).toBe("?count=10");
+    expect(window.sessionStorage.getItem("count")).toBe("10");
+  });
+
+  it("falls back to default for unsupported primitive parsing without custom parse", () => {
+    window.history.replaceState(null, "", "/?state=%7B%22a%22%3A2%7D");
+
+    const { result } = renderHook(() => {
+      return useStoredState({
+        defaultValue: { a: 1 },
+        queryKey: "state",
+        sessionStorageKey: "state",
+      });
+    });
+
+    const [state] = result.current;
+    expect(state).toEqual({ a: 1 });
+    expect(window.location.search).toBe("?state=%5Bobject+Object%5D");
+    expect(window.sessionStorage.getItem("state")).toBe("[object Object]");
   });
 });

@@ -149,6 +149,7 @@ Useful commands:
 - `npm run test`
 - `npm run lint`
 - `npm run prettier`
+- `npm run mutate`
 - `npm run type-check`
 - `npm run knip`
 - `npm run markdownlint`
