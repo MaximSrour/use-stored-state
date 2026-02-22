@@ -9,14 +9,14 @@ const activeQueryKeyInstances = new Map<string, Set<symbol>>();
  * Parse a primitive value from a string, returning null if the value is invalid or cannot be parsed.
  *
  * @param {string} rawValue - The raw string value to parse.
- * @param {State} defaultState - A default state value used to determine the type to parse into.
+ * @param {State} defaultValue - A default state value used to determine the type to parse into.
  * @returns {State | null} The parsed value, or null if the value is invalid or cannot be parsed.
  */
 function parsePrimitiveState<State>(
   rawValue: string,
-  defaultState: State
+  defaultValue: State
 ): State | null {
-  if (typeof defaultState === "boolean") {
+  if (typeof defaultValue === "boolean") {
     if (rawValue === "true") {
       return true as State;
     }
@@ -28,7 +28,7 @@ function parsePrimitiveState<State>(
     return null;
   }
 
-  if (typeof defaultState === "number") {
+  if (typeof defaultValue === "number") {
     const parsedNumber = Number(rawValue);
 
     if (Number.isNaN(parsedNumber)) {
@@ -38,7 +38,7 @@ function parsePrimitiveState<State>(
     return parsedNumber as State;
   }
 
-  if (typeof defaultState === "string") {
+  if (typeof defaultValue === "string") {
     return rawValue as State;
   }
 
@@ -46,21 +46,25 @@ function parsePrimitiveState<State>(
 }
 
 /**
- * Thin wrapper around React's `useState`.
+ * Provides a stateful value that syncs with the URL query parameters and local storage.
  *
  * @param {UseStoredStateOptions<State>} options - An object containing options for the hook.
  * @param {string} options.queryKey - The key to use for syncing state with the URL query parameters.
  * @param {string} options.sessionStorageKey - The key to use for syncing state with session storage.
  * @param {string} options.localStorageKey - The key to use for syncing state with local storage.
- * @param {State} options.defaultState - State value.
+ * @param {State} options.defaultValue - The default state value.
+ * @param {State[]} options.validValues - An array of valid state values. If provided, the hook will only update state if the new value is included in this array.
+ * @param {(value: State) => boolean} options.validate - A function that takes a state value and returns a boolean indicating whether the value is valid. If provided, the hook will only update state if this function returns true for the new value.
+ * @param {ParseStoredValue<State>} options.parse - A function to parse a raw string value into the state type. If not provided, a default parser will be used for primitive types (boolean, number, string).
+ * @param {SerializeStoredValue<State>} options.serialize - A function to serialize the state value into a string. If not provided, a default serializer will be used that converts the value to a string.
  * @returns {UseStoredStateResult<State>} The same tuple as `useState`.
- * @throws {Error} Will throw an error if `defaultState` does not satisfy the validation criteria defined by `validValues` or `validate`.
+ * @throws {Error} Will throw an error if `defaultValue` does not satisfy the validation criteria defined by `validValues` or `validate`.
  */
 export function useStoredState<State>({
   queryKey,
   sessionStorageKey,
   localStorageKey,
-  defaultState,
+  defaultValue,
   validValues,
   validate,
   parse,
@@ -69,7 +73,7 @@ export function useStoredState<State>({
   const parseValue =
     parse ??
     ((rawValue: string) => {
-      return parsePrimitiveState(rawValue, defaultState);
+      return parsePrimitiveState(rawValue, defaultValue);
     });
   const serializeValue =
     serialize ??
@@ -123,15 +127,15 @@ export function useStoredState<State>({
       ? localStorageState
       : null;
 
-  if (!isValid(defaultState)) {
-    throw new Error("defaultState must satisfy useStoredState validation");
+  if (!isValid(defaultValue)) {
+    throw new Error("defaultValue must satisfy useStoredState validation");
   }
 
   const initialState =
     validatedQueryState ??
     validatedSessionStorageState ??
     validatedLocalStorageState ??
-    defaultState;
+    defaultValue;
   const [state, setBaseState] = useState<State>(initialState);
   const queryKeyInstanceId = useRef(Symbol("queryKeyInstance"));
 

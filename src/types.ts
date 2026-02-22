@@ -19,7 +19,7 @@ export type UseStoredStateOptions<State> = {
   queryKey?: string;
   sessionStorageKey?: string;
   localStorageKey?: string;
-  defaultState: State;
+  defaultValue: State;
   parse?: ParseStoredValue<State>;
   serialize?: SerializeStoredValue<State>;
 } & UseStoredStateValidationOptions<State>;

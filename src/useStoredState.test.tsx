@@ -56,7 +56,7 @@ describe("useStoredState", () => {
 
     const { result } = renderHook(() => {
       return useStoredState({
-        defaultState: "default",
+        defaultValue: "default",
         localStorageKey: "state",
         queryKey: "state",
         sessionStorageKey: "state",
@@ -77,7 +77,7 @@ describe("useStoredState", () => {
 
     const { result } = renderHook(() => {
       return useStoredState({
-        defaultState: "default",
+        defaultValue: "default",
         localStorageKey: "state",
         queryKey: "state",
         sessionStorageKey: "state",
@@ -97,7 +97,7 @@ describe("useStoredState", () => {
 
     const { result } = renderHook(() => {
       return useStoredState({
-        defaultState: "default",
+        defaultValue: "default",
         localStorageKey: "state",
         queryKey: "state",
         sessionStorageKey: "state",
@@ -114,7 +114,7 @@ describe("useStoredState", () => {
   it("falls back to default value and syncs to all stores", () => {
     const { result } = renderHook(() => {
       return useStoredState({
-        defaultState: "default",
+        defaultValue: "default",
         localStorageKey: "state",
         queryKey: "state",
         sessionStorageKey: "state",
@@ -132,7 +132,7 @@ describe("useStoredState", () => {
     // eslint-disable-next-line jsdoc/require-jsdoc
     function Wrapper() {
       useStoredState({
-        defaultState: "overview",
+        defaultValue: "overview",
         queryKey: "tab",
       });
 
@@ -147,7 +147,7 @@ describe("useStoredState", () => {
   it("syncs all stores when setState is called", () => {
     const { result } = renderHook(() => {
       return useStoredState({
-        defaultState: "default",
+        defaultValue: "default",
         localStorageKey: "state",
         queryKey: "state",
         sessionStorageKey: "state",
@@ -171,7 +171,7 @@ describe("useStoredState", () => {
 
     const { unmount } = renderHook(() => {
       return useStoredState({
-        defaultState: "default",
+        defaultValue: "default",
         localStorageKey: "state",
         queryKey: "state",
         sessionStorageKey: "state",
@@ -191,7 +191,7 @@ describe("useStoredState", () => {
     // eslint-disable-next-line jsdoc/require-jsdoc
     function NestedTab() {
       useStoredState({
-        defaultState: "details",
+        defaultValue: "details",
         queryKey: "nestedTab",
       });
 
@@ -201,7 +201,7 @@ describe("useStoredState", () => {
     // eslint-disable-next-line jsdoc/require-jsdoc
     function PageTabs() {
       const [pageTab, setPageTab] = useStoredState({
-        defaultState: "overview",
+        defaultValue: "overview",
         queryKey: "pageTab",
       });
 
@@ -237,7 +237,7 @@ describe("useStoredState", () => {
     // eslint-disable-next-line jsdoc/require-jsdoc
     function NestedSharedTab() {
       useStoredState({
-        defaultState: "overview",
+        defaultValue: "overview",
         queryKey: "tab",
       });
 
@@ -247,7 +247,7 @@ describe("useStoredState", () => {
     // eslint-disable-next-line jsdoc/require-jsdoc
     function SharedTabs({ showNested }: { showNested: boolean }) {
       useStoredState({
-        defaultState: "overview",
+        defaultValue: "overview",
         queryKey: "tab",
       });
 
@@ -275,7 +275,7 @@ describe("useStoredState", () => {
     window.localStorage.setItem("state", "from-local");
 
     const { result } = renderHook(() => {
-      return useStoredState({ defaultState: "default" });
+      return useStoredState({ defaultValue: "default" });
     });
 
     const [initialState, setState] = result.current;
@@ -299,7 +299,7 @@ describe("useStoredState", () => {
 
     const { result } = renderHook(() => {
       return useStoredState({
-        defaultState: "default",
+        defaultValue: "default",
         localStorageKey: "mode",
         queryKey: "mode",
         sessionStorageKey: "mode",
@@ -321,7 +321,7 @@ describe("useStoredState", () => {
 
     const { result } = renderHook(() => {
       return useStoredState({
-        defaultState: 2,
+        defaultValue: 2,
         localStorageKey: "count",
         queryKey: "count",
         sessionStorageKey: "count",
@@ -343,7 +343,7 @@ describe("useStoredState", () => {
 
     const { result } = renderHook(() => {
       return useStoredState({
-        defaultState: false,
+        defaultValue: false,
         localStorageKey: "enabled",
         queryKey: "enabled",
         sessionStorageKey: "enabled",
@@ -367,7 +367,7 @@ describe("useStoredState", () => {
   it("does not persist invalid updates from validate function", () => {
     const { result } = renderHook(() => {
       return useStoredState({
-        defaultState: 10,
+        defaultValue: 10,
         localStorageKey: "count",
         queryKey: "count",
         sessionStorageKey: "count",
