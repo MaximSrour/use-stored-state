@@ -1,3 +1,16 @@
+# [1.1.0](https://github.com/MaximSrour/useStoredState/compare/v1.0.0...v1.1.0) (2026-02-22)
+
+
+### Bug Fixes
+
+* update useKeyStore to handle null keys and remove defaultValue ([92a3dff](https://github.com/MaximSrour/useStoredState/commit/92a3dff7ffbd1ad8f2c7be2e2706c9bc036cec30))
+
+
+### Features
+
+* add new key store hook ([10f594d](https://github.com/MaximSrour/useStoredState/commit/10f594d00247caec01bc8f2c86233f17b7701c58))
+* enhance useStoredState to support session and local storage keys, and improve state synchronization ([24b8e15](https://github.com/MaximSrour/useStoredState/commit/24b8e15b9a244243b591f32356263bf726208547))
+
 # 1.0.0 (2026-02-21)
 
 
