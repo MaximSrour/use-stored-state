@@ -1,3 +1,10 @@
+# [1.3.0](https://github.com/MaximSrour/useStoredState/compare/v1.2.0...v1.3.0) (2026-02-22)
+
+
+### Features
+
+* enhance useStoredState to manage query key instances and improve URL synchronization on unmount ([203216a](https://github.com/MaximSrour/useStoredState/commit/203216a34c30b7fcb6afdf66180d41a600fd40b6))
+
 # [1.2.0](https://github.com/MaximSrour/useStoredState/compare/v1.1.0...v1.2.0) (2026-02-22)
 
 
