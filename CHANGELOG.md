@@ -1,3 +1,10 @@
+# [1.4.0](https://github.com/MaximSrour/useStoredState/compare/v1.3.5...v1.4.0) (2026-02-22)
+
+
+### Features
+
+* add validation for useStoredState options to enforce constraints in javascript ([cdbf9ca](https://github.com/MaximSrour/useStoredState/commit/cdbf9ca82fe62c1f8df78cd58381a3321f60a566))
+
 ## [1.3.5](https://github.com/MaximSrour/useStoredState/compare/v1.3.4...v1.3.5) (2026-02-22)
 
 
