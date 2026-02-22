@@ -1,10 +1,9 @@
 # use-stored-state
 
-`use-stored-state` is a React hook that keeps state synchronized across:
+`use-stored-state` is a React hook that keeps state synchronized with:
 
-- URL query params
-- Session storage
-- Local storage
+- URL query params (optional)
+- Session storage or local storage (optional, mutually exclusive)
 
 It gives you a `useState`-like API with persistence, hydration priority, and
 validation built in.
@@ -29,7 +28,6 @@ function Example() {
     defaultValue: 25,
     queryKey: "pageSize",
     sessionStorageKey: "usersPageSize",
-    localStorageKey: "usersPageSize",
     validValues: [10, 25, 50, 100] as const,
   });
 
@@ -58,39 +56,28 @@ function Example() {
 ```ts
 type UseStoredStateOptions<State> = {
   defaultValue: State;
-} & (
-  | {
-      queryKey: string;
-      sessionStorageKey?: string;
-      localStorageKey?: string;
-    }
-  | {
-      queryKey?: string;
-      sessionStorageKey: string;
-      localStorageKey?: string;
-    }
-  | {
-      queryKey?: string;
-      sessionStorageKey?: string;
-      localStorageKey: string;
-    }
-) &
-  (
-    | { validValues: readonly State[]; validate?: never }
-    | { validValues?: never; validate: (value: State) => boolean }
-    | { validValues?: undefined; validate?: undefined }
-  ) &
-  (
-    | {
-        parse: (rawValue: string) => State | null;
-        serialize: (value: State) => string;
-      }
-    | {
-        parse?: undefined;
-        serialize?: undefined;
-      }
-  );
+
+  // Provide at least one key:
+  queryKey?: string;
+  sessionStorageKey?: string;
+  localStorageKey?: string;
+
+  // Validation (choose one or neither):
+  validValues?: readonly State[];
+  validate?: (value: State) => boolean;
+
+  // Parsing/serialization (provide both or neither):
+  parse?: (rawValue: string) => State | null;
+  serialize?: (value: State) => string;
+};
 ```
+
+Rules:
+
+- At least one of `queryKey`, `sessionStorageKey`, `localStorageKey` is required.
+- `sessionStorageKey` and `localStorageKey` cannot be used together.
+- Use `validValues` or `validate` (not both).
+- If you pass `parse`, you must also pass `serialize` (and vice versa).
 
 Returns:
 
@@ -107,17 +94,17 @@ Where `setState` only applies valid values.
 Initial state is resolved in this order:
 
 1. Query param (`queryKey`)
-2. Session storage (`sessionStorageKey`)
-3. Local storage (`localStorageKey`)
-4. `defaultValue`
+2. Session storage (`sessionStorageKey`) or local storage (`localStorageKey`)
+3. `defaultValue`
 
 Invalid hydrated values are ignored when `validValues` or `validate` is used.
 
 ### Synchronization
 
 - On mount and on each valid state update, the hook syncs current state to all
-  configured stores.
+  configured stores (query + at most one storage source).
 - At least one key is required.
+- `sessionStorageKey` and `localStorageKey` are mutually exclusive.
 - Any omitted store key is not read or written.
 
 ### Query param lifecycle

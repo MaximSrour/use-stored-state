@@ -48,8 +48,8 @@ function parsePrimitiveState<State>(
  *
  * @param {UseStoredStateOptions<State>} options - An object containing options for the hook.
  * @param {string} options.queryKey - The key to use for syncing state with the URL query parameters.
- * @param {string} options.sessionStorageKey - The key to use for syncing state with session storage.
- * @param {string} options.localStorageKey - The key to use for syncing state with local storage.
+ * @param {string} options.sessionStorageKey - The key to use for syncing state with session storage. Mutually exclusive with `localStorageKey`.
+ * @param {string} options.localStorageKey - The key to use for syncing state with local storage. Mutually exclusive with `sessionStorageKey`.
  * @param {State} options.defaultValue - The default state value.
  * @param {State[]} options.validValues - An array of valid state values. If provided, the hook will only update state if the new value is included in this array.
  * @param {(value: State) => boolean} options.validate - A function that takes a state value and returns a boolean indicating whether the value is valid. If provided, the hook will only update state if this function returns true for the new value.

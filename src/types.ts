@@ -18,12 +18,31 @@ type RequireAllOrNone<T, Keys extends keyof T = keyof T> =
   | Required<Pick<T, Keys>>
   | Partial<Record<Keys, never>>;
 
-type KeyOptionsBase = {
-  queryKey: string;
-  sessionStorageKey: string;
-  localStorageKey: string;
+type StorageKeyOptions =
+  | {
+      sessionStorageKey: string;
+      localStorageKey?: never;
+    }
+  | {
+      sessionStorageKey?: never;
+      localStorageKey: string;
+    }
+  | {
+      sessionStorageKey?: never;
+      localStorageKey?: never;
+    };
+type NoStorageKeyOption = {
+  sessionStorageKey?: never;
+  localStorageKey?: never;
 };
-type KeyOptions = Prettify<RequireOneOrMore<KeyOptionsBase>>;
+
+type QueryKeyOption = {
+  queryKey: string;
+};
+type KeyOptions = Prettify<
+  | (QueryKeyOption & StorageKeyOptions)
+  | ({ queryKey?: never } & Exclude<StorageKeyOptions, NoStorageKeyOption>)
+>;
 
 type ValidationOptionsBase<State> = {
   validValues: readonly State[];

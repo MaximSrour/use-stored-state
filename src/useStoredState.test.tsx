@@ -9,6 +9,7 @@ import {
 import { Fragment, StrictMode, createElement } from "react";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
+import { type UseStoredStateOptions } from "./types";
 import { useStoredState } from "./useStoredState";
 
 describe("useStoredState", () => {
@@ -49,7 +50,7 @@ describe("useStoredState", () => {
     cleanup();
   });
 
-  it("loads value from query first and syncs to all stores", () => {
+  it("loads value from query first and syncs to configured stores", () => {
     window.history.replaceState(null, "", "/?state=from-query");
     window.sessionStorage.setItem("state", "from-session");
     window.localStorage.setItem("state", "from-local");
@@ -57,7 +58,6 @@ describe("useStoredState", () => {
     const { result } = renderHook(() => {
       return useStoredState({
         defaultValue: "default",
-        localStorageKey: "state",
         queryKey: "state",
         sessionStorageKey: "state",
       });
@@ -67,10 +67,9 @@ describe("useStoredState", () => {
     expect(state).toBe("from-query");
     expect(window.location.search).toBe("?state=from-query");
     expect(window.sessionStorage.getItem("state")).toBe("from-query");
-    expect(window.localStorage.getItem("state")).toBe("from-query");
   });
 
-  it("falls back to session storage and syncs to all stores", () => {
+  it("falls back to session storage and syncs to configured stores", () => {
     window.history.replaceState(null, "", "/?other=value");
     window.sessionStorage.setItem("state", "from-session");
     window.localStorage.setItem("state", "from-local");
@@ -78,7 +77,6 @@ describe("useStoredState", () => {
     const { result } = renderHook(() => {
       return useStoredState({
         defaultValue: "default",
-        localStorageKey: "state",
         queryKey: "state",
         sessionStorageKey: "state",
       });
@@ -88,10 +86,9 @@ describe("useStoredState", () => {
     expect(state).toBe("from-session");
     expect(window.location.search).toBe("?other=value&state=from-session");
     expect(window.sessionStorage.getItem("state")).toBe("from-session");
-    expect(window.localStorage.getItem("state")).toBe("from-session");
   });
 
-  it("falls back to local storage and syncs to all stores", () => {
+  it("falls back to local storage and syncs to configured stores", () => {
     window.history.replaceState(null, "", "/?other=value");
     window.localStorage.setItem("state", "from-local");
 
@@ -100,22 +97,19 @@ describe("useStoredState", () => {
         defaultValue: "default",
         localStorageKey: "state",
         queryKey: "state",
-        sessionStorageKey: "state",
       });
     });
 
     const [state] = result.current;
     expect(state).toBe("from-local");
     expect(window.location.search).toBe("?other=value&state=from-local");
-    expect(window.sessionStorage.getItem("state")).toBe("from-local");
     expect(window.localStorage.getItem("state")).toBe("from-local");
   });
 
-  it("falls back to default value and syncs to all stores", () => {
+  it("falls back to default value and syncs to configured stores", () => {
     const { result } = renderHook(() => {
       return useStoredState({
         defaultValue: "default",
-        localStorageKey: "state",
         queryKey: "state",
         sessionStorageKey: "state",
       });
@@ -125,7 +119,6 @@ describe("useStoredState", () => {
     expect(state).toBe("default");
     expect(window.location.search).toBe("?state=default");
     expect(window.sessionStorage.getItem("state")).toBe("default");
-    expect(window.localStorage.getItem("state")).toBe("default");
   });
 
   it("fills query param on initial mount in StrictMode", () => {
@@ -144,11 +137,10 @@ describe("useStoredState", () => {
     expect(window.location.search).toBe("?tab=overview");
   });
 
-  it("syncs all stores when setState is called", () => {
+  it("syncs configured stores when setState is called", () => {
     const { result } = renderHook(() => {
       return useStoredState({
         defaultValue: "default",
-        localStorageKey: "state",
         queryKey: "state",
         sessionStorageKey: "state",
       });
@@ -163,7 +155,6 @@ describe("useStoredState", () => {
     expect(state).toBe("next");
     expect(window.location.search).toBe("?state=next");
     expect(window.sessionStorage.getItem("state")).toBe("next");
-    expect(window.localStorage.getItem("state")).toBe("next");
   });
 
   it("removes query param on unmount", () => {
@@ -172,7 +163,6 @@ describe("useStoredState", () => {
     const { unmount } = renderHook(() => {
       return useStoredState({
         defaultValue: "default",
-        localStorageKey: "state",
         queryKey: "state",
         sessionStorageKey: "state",
       });
@@ -184,7 +174,6 @@ describe("useStoredState", () => {
 
     expect(window.location.search).toBe("?other=value");
     expect(window.sessionStorage.getItem("state")).toBe("default");
-    expect(window.localStorage.getItem("state")).toBe("default");
   });
 
   it("removes nested query param when parent tab change unmounts nested hook", () => {
@@ -279,7 +268,6 @@ describe("useStoredState", () => {
         defaultValue: "default",
         localStorageKey: "mode",
         queryKey: "mode",
-        sessionStorageKey: "mode",
         validValues: ["default", "from-local", "from-query"] as const,
       });
     });
@@ -287,7 +275,6 @@ describe("useStoredState", () => {
     const [state] = result.current;
     expect(state).toBe("from-local");
     expect(window.location.search).toBe("?mode=from-local");
-    expect(window.sessionStorage.getItem("mode")).toBe("from-local");
     expect(window.localStorage.getItem("mode")).toBe("from-local");
   });
 
@@ -299,7 +286,6 @@ describe("useStoredState", () => {
     const { result } = renderHook(() => {
       return useStoredState({
         defaultValue: 2,
-        localStorageKey: "count",
         queryKey: "count",
         sessionStorageKey: "count",
         validate: (value) => {
@@ -312,7 +298,6 @@ describe("useStoredState", () => {
     expect(state).toBe(8);
     expect(window.location.search).toBe("?count=8");
     expect(window.sessionStorage.getItem("count")).toBe("8");
-    expect(window.localStorage.getItem("count")).toBe("8");
   });
 
   it("parses and syncs boolean values", () => {
@@ -321,7 +306,6 @@ describe("useStoredState", () => {
     const { result } = renderHook(() => {
       return useStoredState({
         defaultValue: false,
-        localStorageKey: "enabled",
         queryKey: "enabled",
         sessionStorageKey: "enabled",
       });
@@ -330,7 +314,6 @@ describe("useStoredState", () => {
     const [state, setState] = result.current;
     expect(state).toBe(true);
     expect(window.sessionStorage.getItem("enabled")).toBe("true");
-    expect(window.localStorage.getItem("enabled")).toBe("true");
 
     act(() => {
       setState(false);
@@ -338,14 +321,12 @@ describe("useStoredState", () => {
 
     expect(window.location.search).toBe("?enabled=false");
     expect(window.sessionStorage.getItem("enabled")).toBe("false");
-    expect(window.localStorage.getItem("enabled")).toBe("false");
   });
 
   it("does not persist invalid updates from validate function", () => {
     const { result } = renderHook(() => {
       return useStoredState({
         defaultValue: 10,
-        localStorageKey: "count",
         queryKey: "count",
         sessionStorageKey: "count",
         validate: (value) => {
@@ -363,6 +344,17 @@ describe("useStoredState", () => {
     expect(state).toBe(10);
     expect(window.location.search).toBe("?count=10");
     expect(window.sessionStorage.getItem("count")).toBe("10");
-    expect(window.localStorage.getItem("count")).toBe("10");
+  });
+
+  it("enforces mutually exclusive storage keys at the type level", () => {
+    // @ts-expect-error sessionStorageKey and localStorageKey are mutually exclusive.
+    const _invalidOptions: UseStoredStateOptions<string> = {
+      defaultValue: "default",
+      localStorageKey: "state",
+      queryKey: "state",
+      sessionStorageKey: "state",
+    };
+
+    expect(true).toBe(true);
   });
 });
