@@ -28,14 +28,24 @@ type ValidationOptions<State> =
       validValues?: undefined;
       validate?: undefined;
     };
+
 type ParseStoredValue<State> = (rawValue: string) => State | null;
 type SerializeStoredValue<State> = (value: State) => string;
 
+type ParseSerializeOptions<State> =
+  | {
+      parse: ParseStoredValue<State>;
+      serialize: SerializeStoredValue<State>;
+    }
+  | {
+      parse?: never;
+      serialize?: never;
+    };
+
 export type UseStoredStateOptions<State> = {
   defaultValue: State;
-  parse?: ParseStoredValue<State>;
-  serialize?: SerializeStoredValue<State>;
 } & KeyOptions &
+  ParseSerializeOptions<State> &
   ValidationOptions<State>;
 
 export type UseStoredStateResult<State> = [State, (newState: State) => void];

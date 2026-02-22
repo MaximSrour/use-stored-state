@@ -58,8 +58,6 @@ function Example() {
 ```ts
 type UseStoredStateOptions<State> = {
   defaultValue: State;
-  parse?: (rawValue: string) => State | null;
-  serialize?: (value: State) => string;
 } & (
   | {
       queryKey: string;
@@ -78,10 +76,20 @@ type UseStoredStateOptions<State> = {
     }
 ) &
   (
-  | { validValues: readonly State[]; validate?: never }
-  | { validValues?: never; validate: (value: State) => boolean }
-  | { validValues?: undefined; validate?: undefined }
-);
+    | { validValues: readonly State[]; validate?: never }
+    | { validValues?: never; validate: (value: State) => boolean }
+    | { validValues?: undefined; validate?: undefined }
+  ) &
+  (
+    | {
+        parse: (rawValue: string) => State | null;
+        serialize: (value: State) => string;
+      }
+    | {
+        parse?: undefined;
+        serialize?: undefined;
+      }
+  );
 ```
 
 Returns:
