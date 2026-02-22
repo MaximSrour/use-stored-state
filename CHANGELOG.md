@@ -1,3 +1,10 @@
+## [1.3.5](https://github.com/MaximSrour/useStoredState/compare/v1.3.4...v1.3.5) (2026-02-22)
+
+
+### Bug Fixes
+
+* enforce only one of session and local storage ([ec4cfab](https://github.com/MaximSrour/useStoredState/commit/ec4cfabd3395844c81206df3047a48f1373e04d1))
+
 ## [1.3.4](https://github.com/MaximSrour/useStoredState/compare/v1.3.3...v1.3.4) (2026-02-22)
 
 
