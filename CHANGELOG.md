@@ -1,3 +1,15 @@
+## [1.4.1](https://github.com/MaximSrour/useStoredState/compare/v1.4.0...v1.4.1) (2026-02-23)
+
+
+### Bug Fixes
+
+* add mutation tests and improve code coverage ([4b27ce2](https://github.com/MaximSrour/useStoredState/commit/4b27ce2c4c20c030c2a60be1093bb81a3d3bb7a0))
+* add tests for certain null-read guards and query cleanup ([0b85240](https://github.com/MaximSrour/useStoredState/commit/0b85240480cfed1daf89842e4b81a4025c9923ca))
+* get 100% coverage on useKeyStore ([f04ef52](https://github.com/MaximSrour/useStoredState/commit/f04ef524b742e48587b4dac54eb5a2cb7be76ab1))
+* resolve remaining mutation errors ([be648d4](https://github.com/MaximSrour/useStoredState/commit/be648d4f7e2d41809fad469d786b0b807a3b94cd))
+* update documentation to reflect new best practices when working with mutation tests ([a77a26d](https://github.com/MaximSrour/useStoredState/commit/a77a26df30377876389d9bc1374e7836bfcfad88))
+* update test structure to be grouped better ([abfada1](https://github.com/MaximSrour/useStoredState/commit/abfada1da2ddff5d6c5afc69b10b3a73d1143016))
+
 # [1.4.0](https://github.com/MaximSrour/useStoredState/compare/v1.3.5...v1.4.0) (2026-02-22)
 
 
