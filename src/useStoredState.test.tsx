@@ -7,7 +7,7 @@ import {
   screen,
 } from "@testing-library/react";
 import { Fragment, StrictMode, createElement } from "react";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { type UseStoredStateOptions } from "./types";
 import { useStoredState } from "./useStoredState";
@@ -308,6 +308,58 @@ describe("useStoredState", () => {
   });
 
   describe("validation of hydrated values", () => {
+    it("falls back to default when query value fails validValues", () => {
+      window.history.replaceState(null, "", "/?mode=invalid");
+
+      const { result } = renderHook(() => {
+        return useStoredState({
+          defaultValue: "default",
+          queryKey: "mode",
+          sessionStorageKey: "mode",
+          validValues: ["default", "allowed"] as const,
+        });
+      });
+
+      const [state] = result.current;
+      expect(state).toBe("default");
+      expect(window.location.search).toBe("?mode=default");
+      expect(window.sessionStorage.getItem("mode")).toBe("default");
+    });
+
+    it("falls back to default when session storage value fails validValues", () => {
+      window.sessionStorage.setItem("mode", "invalid");
+
+      const { result } = renderHook(() => {
+        return useStoredState({
+          defaultValue: "default",
+          sessionStorageKey: "mode",
+          validValues: ["default", "allowed"] as const,
+        });
+      });
+
+      const [state] = result.current;
+      expect(state).toBe("default");
+      expect(window.location.search).toBe("");
+      expect(window.sessionStorage.getItem("mode")).toBe("default");
+    });
+
+    it("falls back to default when local storage value fails validValues", () => {
+      window.localStorage.setItem("mode", "invalid");
+
+      const { result } = renderHook(() => {
+        return useStoredState({
+          defaultValue: "default",
+          localStorageKey: "mode",
+          validValues: ["default", "allowed"] as const,
+        });
+      });
+
+      const [state] = result.current;
+      expect(state).toBe("default");
+      expect(window.location.search).toBe("");
+      expect(window.localStorage.getItem("mode")).toBe("default");
+    });
+
     it("ignores invalid persisted values from validValues and falls back to default", () => {
       window.history.replaceState(null, "", "/?mode=invalid");
       window.sessionStorage.setItem("mode", "also-invalid");
@@ -350,6 +402,75 @@ describe("useStoredState", () => {
       expect(window.sessionStorage.getItem("count")).toBe("8");
     });
 
+    it("does not call validate with null when query value is missing", () => {
+      const validate = vi.fn((value: string) => {
+        if ((value as unknown) === null) {
+          throw new Error("validate called with null");
+        }
+
+        return value === "allowed";
+      });
+
+      const { result } = renderHook(() => {
+        return useStoredState({
+          defaultValue: "allowed",
+          queryKey: "mode",
+          validate,
+        });
+      });
+
+      expect(result.current[0]).toBe("allowed");
+      expect(
+        validate.mock.calls.some(([value]) => (value as unknown) === null)
+      ).toBe(false);
+    });
+
+    it("does not call validate with null when session value is missing", () => {
+      const validate = vi.fn((value: string) => {
+        if ((value as unknown) === null) {
+          throw new Error("validate called with null");
+        }
+
+        return value === "allowed";
+      });
+
+      const { result } = renderHook(() => {
+        return useStoredState({
+          defaultValue: "allowed",
+          sessionStorageKey: "mode",
+          validate,
+        });
+      });
+
+      expect(result.current[0]).toBe("allowed");
+      expect(
+        validate.mock.calls.some(([value]) => (value as unknown) === null)
+      ).toBe(false);
+    });
+
+    it("does not call validate with null when local value is missing", () => {
+      const validate = vi.fn((value: string) => {
+        if ((value as unknown) === null) {
+          throw new Error("validate called with null");
+        }
+
+        return value === "allowed";
+      });
+
+      const { result } = renderHook(() => {
+        return useStoredState({
+          defaultValue: "allowed",
+          localStorageKey: "mode",
+          validate,
+        });
+      });
+
+      expect(result.current[0]).toBe("allowed");
+      expect(
+        validate.mock.calls.some(([value]) => (value as unknown) === null)
+      ).toBe(false);
+    });
+
     it("throws when defaultValue does not satisfy validation", () => {
       expect(() => {
         renderHook(() => {
@@ -361,9 +482,114 @@ describe("useStoredState", () => {
         });
       }).toThrow("defaultValue must satisfy useStoredState validation");
     });
+
+    it("ignores query hydrated value when validate rejects it", () => {
+      window.history.replaceState(null, "", "/?mode=rejected");
+
+      const { result } = renderHook(() => {
+        return useStoredState({
+          defaultValue: "allowed",
+          queryKey: "mode",
+          validate: (value: string) => {
+            return value === "allowed";
+          },
+        });
+      });
+
+      const [state] = result.current;
+      expect(state).toBe("allowed");
+      expect(window.location.search).toBe("?mode=allowed");
+    });
+
+    it("ignores session hydrated value when validate rejects it", () => {
+      window.sessionStorage.setItem("mode", "rejected");
+
+      const { result } = renderHook(() => {
+        return useStoredState({
+          defaultValue: "allowed",
+          sessionStorageKey: "mode",
+          validate: (value: string) => {
+            return value === "allowed";
+          },
+        });
+      });
+
+      const [state] = result.current;
+      expect(state).toBe("allowed");
+      expect(window.sessionStorage.getItem("mode")).toBe("allowed");
+    });
+
+    it("ignores local hydrated value when validate rejects it", () => {
+      window.localStorage.setItem("mode", "rejected");
+
+      const { result } = renderHook(() => {
+        return useStoredState({
+          defaultValue: "allowed",
+          localStorageKey: "mode",
+          validate: (value: string) => {
+            return value === "allowed";
+          },
+        });
+      });
+
+      const [state] = result.current;
+      expect(state).toBe("allowed");
+      expect(window.localStorage.getItem("mode")).toBe("allowed");
+    });
   });
 
   describe("parsing and serialization behavior", () => {
+    it("uses custom parse and serialize for hydrated query values", () => {
+      window.history.replaceState(null, "", "/?count=v-7");
+
+      const { result } = renderHook(() => {
+        return useStoredState({
+          defaultValue: 0,
+          parse: (rawValue: string) => {
+            return Number(rawValue.replace("v-", ""));
+          },
+          queryKey: "count",
+          serialize: (value: number) => {
+            return `v-${value}`;
+          },
+          sessionStorageKey: "count",
+        });
+      });
+
+      const [state, setState] = result.current;
+      expect(state).toBe(7);
+      expect(window.location.search).toBe("?count=v-7");
+      expect(window.sessionStorage.getItem("count")).toBe("v-7");
+
+      act(() => {
+        setState(9);
+      });
+
+      expect(window.location.search).toBe("?count=v-9");
+      expect(window.sessionStorage.getItem("count")).toBe("v-9");
+    });
+
+    it("uses custom serialize when syncing default values", () => {
+      const { result } = renderHook(() => {
+        return useStoredState({
+          defaultValue: 3,
+          parse: (rawValue: string) => {
+            return Number(rawValue.replace("v-", ""));
+          },
+          queryKey: "count",
+          serialize: (value: number) => {
+            return `v-${value}`;
+          },
+          sessionStorageKey: "count",
+        });
+      });
+
+      const [state] = result.current;
+      expect(state).toBe(3);
+      expect(window.location.search).toBe("?count=v-3");
+      expect(window.sessionStorage.getItem("count")).toBe("v-3");
+    });
+
     it("parses and syncs boolean values", () => {
       window.history.replaceState(null, "", "/?enabled=true");
 
@@ -497,6 +723,77 @@ describe("useStoredState", () => {
       expect(state).toBe(10);
       expect(window.location.search).toBe("?count=10");
       expect(window.sessionStorage.getItem("count")).toBe("10");
+    });
+
+    it("reacts to updated validValues on rerender", () => {
+      const { result, rerender } = renderHook(
+        ({ validValues }: { validValues: readonly string[] }) => {
+          return useStoredState({
+            defaultValue: "a",
+            queryKey: "state",
+            validValues,
+          });
+        },
+        {
+          initialProps: { validValues: ["a"] as readonly string[] },
+        }
+      );
+
+      act(() => {
+        const [, setState] = result.current;
+        setState("b");
+      });
+      expect(result.current[0]).toBe("a");
+
+      rerender({ validValues: ["a", "b"] as readonly string[] });
+
+      act(() => {
+        const [, setState] = result.current;
+        setState("b");
+      });
+      expect(result.current[0]).toBe("b");
+      expect(window.location.search).toBe("?state=b");
+    });
+
+    it("syncs to updated keys after rerender", () => {
+      const { result, rerender } = renderHook(
+        ({
+          queryKey,
+          sessionStorageKey,
+        }: {
+          queryKey: string;
+          sessionStorageKey: string;
+        }) => {
+          return useStoredState({
+            defaultValue: "one",
+            queryKey,
+            sessionStorageKey,
+          });
+        },
+        {
+          initialProps: { queryKey: "first", sessionStorageKey: "first" },
+        }
+      );
+
+      act(() => {
+        const [, setState] = result.current;
+        setState("two");
+      });
+      expect(window.location.search).toBe("?first=two");
+      expect(window.sessionStorage.getItem("first")).toBe("two");
+
+      rerender({ queryKey: "second", sessionStorageKey: "second" });
+
+      act(() => {
+        const [, setState] = result.current;
+        setState("three");
+      });
+      expect(window.location.search).toBe("?second=three");
+      expect(
+        new URLSearchParams(window.location.search).get("first")
+      ).toBeNull();
+      expect(window.sessionStorage.getItem("first")).toBe("two");
+      expect(window.sessionStorage.getItem("second")).toBe("three");
     });
   });
 
