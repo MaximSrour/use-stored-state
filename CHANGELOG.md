@@ -1,3 +1,28 @@
+# [2.0.0](https://github.com/MaximSrour/useStoredState/compare/v1.4.1...v2.0.0) (2026-03-08)
+
+
+* feat!: add reset metadata to useStoredState result tuple ([e4d2440](https://github.com/MaximSrour/useStoredState/commit/e4d244059f63d760dab1af3ba2fbcd20436aa429))
+
+
+### Bug Fixes
+
+* enhance reset function to prevent unnecessary sync when state is unchanged ([de178ad](https://github.com/MaximSrour/useStoredState/commit/de178adacb4a7ed5d5afe443bd6b16d9ed85c98c))
+* resolve lint warnings ([1ff6fc8](https://github.com/MaximSrour/useStoredState/commit/1ff6fc8623e06fa2974dfe314f509a9853c915a4))
+* restore default state to stored values when in an invalid state ([619fc6d](https://github.com/MaximSrour/useStoredState/commit/619fc6d56289607412ea2202844335f179fca3e4))
+* update state handling in test to reflect correct value after setState ([ddf5e07](https://github.com/MaximSrour/useStoredState/commit/ddf5e07f448ecbaf3e97c35845ac6b92238858f0))
+
+
+### Features
+
+* add reset function to output ([10087f2](https://github.com/MaximSrour/useStoredState/commit/10087f206ea37c7166636152f33cef6198463377))
+
+
+### BREAKING CHANGES
+
+* useStoredState now returns [state, setState, { reset }]
+instead of a 2-item tuple. This changes TypeScript assignability and runtime
+spread behavior for consumers.
+
 ## [1.4.1](https://github.com/MaximSrour/useStoredState/compare/v1.4.0...v1.4.1) (2026-02-23)
 
 
