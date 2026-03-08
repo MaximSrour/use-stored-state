@@ -792,6 +792,28 @@ describe("useStoredState", () => {
       expect(window.sessionStorage.getItem("count")).toBe("v-3");
     });
 
+    it("repairs configured stores when reset is called with unchanged default state", () => {
+      const { result } = renderHook(() => {
+        return useStoredState({
+          defaultValue: "default",
+          queryKey: "state",
+          sessionStorageKey: "state",
+        });
+      });
+
+      window.history.replaceState(null, "", "/?state=drifted");
+      window.sessionStorage.setItem("state", "drifted");
+
+      act(() => {
+        const [, , { reset }] = result.current;
+        reset();
+      });
+
+      expect(result.current[0]).toBe("default");
+      expect(window.location.search).toBe("?state=default");
+      expect(window.sessionStorage.getItem("state")).toBe("default");
+    });
+
     it("does not persist invalid updates from validate function", () => {
       const { result } = renderHook(() => {
         return useStoredState({

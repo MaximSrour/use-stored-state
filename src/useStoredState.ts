@@ -254,6 +254,7 @@ export function useStoredState<State>({
 
   const reset = (): void => {
     setState(defaultValue);
+    syncAllStores(defaultValue);
   };
 
   return [state, setState, { reset }] as const;
