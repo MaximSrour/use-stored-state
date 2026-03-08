@@ -253,8 +253,12 @@ export function useStoredState<State>({
   };
 
   const reset = (): void => {
+    if (Object.is(state, defaultValue)) {
+      syncAllStores(defaultValue);
+      return;
+    }
+
     setState(defaultValue);
-    syncAllStores(defaultValue);
   };
 
   return [state, setState, { reset }] as const;
