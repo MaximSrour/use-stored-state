@@ -699,11 +699,11 @@ describe("useStoredState", () => {
 
       const [state, setState] = result.current;
 
+      expect(state).toBe("default");
+
       act(() => {
         setState("next");
       });
-
-      expect(state).toBe("default");
       expect(result.current[0]).toBe("next");
       expect(window.location.search).toBe("?state=next");
       expect(window.sessionStorage.getItem("state")).toBe("next");
