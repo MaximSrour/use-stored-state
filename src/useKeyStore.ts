@@ -8,6 +8,10 @@ const activeQueryKeyInstances = new Map<string, Set<symbol>>();
  * Stores state by source/key pair.
  *
  * @param {UseKeyStoreOptions} options - Hook options.
+ * @param {string | null} options.key - The key to store the value under. If `null`, the hook will not read or write any value.
+ * @param {"query" | "localStorage" | "sessionStorage"} options.source - The source to store the value in.
+ * @param {(rawValue: string) => State} [options.parse] - Optional function to parse the raw string value from the storage into the desired state type.
+ * @param {(value: State) => string} [options.serialize] - Optional function to serialize the state value into a string for storage.
  * @returns {UseKeyStoreResult<State>} The same tuple shape as `useState`.
  */
 export function useKeyStore<State>({
