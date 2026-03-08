@@ -139,7 +139,7 @@ function parsePrimitiveState<State>(
  * @param {(value: State) => boolean} options.validate - A function that takes a state value and returns a boolean indicating whether the value is valid. If provided, the hook will only update state if this function returns true for the new value.
  * @param {ParseStoredValue<State>} options.parse - A function to parse a raw string value into the state type. If not provided, a default parser will be used for primitive types (boolean, number, string).
  * @param {SerializeStoredValue<State>} options.serialize - A function to serialize the state value into a string. If not provided, a default serializer will be used that converts the value to a string.
- * @returns {UseStoredStateResult<State>} The same tuple as `useState`.
+ * @returns {UseStoredStateResult<State>} The same tuple shape as `useState`, plus a reset helper.
  * @throws {Error} Will throw an error for invalid options and when `defaultValue` fails validation.
  * @throws {TypeError} Will throw a type error for options of the wrong type.
  */
@@ -252,5 +252,14 @@ export function useStoredState<State>({
     setBaseState(newState);
   };
 
-  return [state, setState] as const;
+  const reset = (): void => {
+    if (Object.is(state, defaultValue)) {
+      syncAllStores(defaultValue);
+      return;
+    }
+
+    setState(defaultValue);
+  };
+
+  return [state, setState, { reset }] as const;
 }

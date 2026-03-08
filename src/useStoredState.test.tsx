@@ -421,7 +421,9 @@ describe("useStoredState", () => {
 
       expect(result.current[0]).toBe("allowed");
       expect(
-        validate.mock.calls.some(([value]) => (value as unknown) === null)
+        validate.mock.calls.some(([value]) => {
+          return (value as unknown) === null;
+        })
       ).toBe(false);
     });
 
@@ -444,7 +446,9 @@ describe("useStoredState", () => {
 
       expect(result.current[0]).toBe("allowed");
       expect(
-        validate.mock.calls.some(([value]) => (value as unknown) === null)
+        validate.mock.calls.some(([value]) => {
+          return (value as unknown) === null;
+        })
       ).toBe(false);
     });
 
@@ -467,7 +471,9 @@ describe("useStoredState", () => {
 
       expect(result.current[0]).toBe("allowed");
       expect(
-        validate.mock.calls.some(([value]) => (value as unknown) === null)
+        validate.mock.calls.some(([value]) => {
+          return (value as unknown) === null;
+        })
       ).toBe(false);
     });
 
@@ -682,6 +688,38 @@ describe("useStoredState", () => {
   });
 
   describe("state updates and synchronization", () => {
+    it("preserves existing two-value destructuring", () => {
+      const { result } = renderHook(() => {
+        return useStoredState({
+          defaultValue: "default",
+          queryKey: "state",
+          sessionStorageKey: "state",
+        });
+      });
+
+      const [state, setState] = result.current;
+
+      expect(state).toBe("default");
+
+      act(() => {
+        setState("next");
+      });
+      expect(result.current[0]).toBe("next");
+      expect(window.location.search).toBe("?state=next");
+      expect(window.sessionStorage.getItem("state")).toBe("next");
+    });
+
+    it("returns reset metadata as the third tuple item", () => {
+      const { result } = renderHook(() => {
+        return useStoredState({
+          defaultValue: "default",
+          queryKey: "state",
+        });
+      });
+
+      expect(typeof result.current[2].reset).toBe("function");
+    });
+
     it("syncs configured stores when setState is called", () => {
       const { result } = renderHook(() => {
         return useStoredState({
@@ -700,6 +738,80 @@ describe("useStoredState", () => {
       expect(state).toBe("next");
       expect(window.location.search).toBe("?state=next");
       expect(window.sessionStorage.getItem("state")).toBe("next");
+    });
+
+    it("resets state back to the default value", () => {
+      const { result } = renderHook(() => {
+        return useStoredState({
+          defaultValue: "default",
+          queryKey: "state",
+          sessionStorageKey: "state",
+        });
+      });
+
+      act(() => {
+        const [, setState] = result.current;
+        setState("next");
+      });
+
+      act(() => {
+        const [, , { reset }] = result.current;
+        reset();
+      });
+
+      expect(result.current[0]).toBe("default");
+    });
+
+    it("re-syncs configured stores when reset is called", () => {
+      const { result } = renderHook(() => {
+        return useStoredState({
+          defaultValue: 3,
+          parse: (rawValue: string) => {
+            return Number(rawValue.replace("v-", ""));
+          },
+          queryKey: "count",
+          serialize: (value: number) => {
+            return `v-${value}`;
+          },
+          sessionStorageKey: "count",
+        });
+      });
+
+      act(() => {
+        const [, setState] = result.current;
+        setState(7);
+      });
+
+      act(() => {
+        const [, , { reset }] = result.current;
+        reset();
+      });
+
+      expect(result.current[0]).toBe(3);
+      expect(window.location.search).toBe("?count=v-3");
+      expect(window.sessionStorage.getItem("count")).toBe("v-3");
+    });
+
+    it("repairs configured stores when reset is called with unchanged default state", () => {
+      const { result } = renderHook(() => {
+        return useStoredState({
+          defaultValue: "default",
+          queryKey: "state",
+          sessionStorageKey: "state",
+        });
+      });
+
+      window.history.replaceState(null, "", "/?state=drifted");
+      window.sessionStorage.setItem("state", "drifted");
+
+      act(() => {
+        const [, , { reset }] = result.current;
+        reset();
+      });
+
+      expect(result.current[0]).toBe("default");
+      expect(window.location.search).toBe("?state=default");
+      expect(window.sessionStorage.getItem("state")).toBe("default");
     });
 
     it("does not persist invalid updates from validate function", () => {
