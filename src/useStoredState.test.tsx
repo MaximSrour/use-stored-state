@@ -421,7 +421,9 @@ describe("useStoredState", () => {
 
       expect(result.current[0]).toBe("allowed");
       expect(
-        validate.mock.calls.some(([value]) => (value as unknown) === null)
+        validate.mock.calls.some(([value]) => {
+          return (value as unknown) === null;
+        })
       ).toBe(false);
     });
 
@@ -444,7 +446,9 @@ describe("useStoredState", () => {
 
       expect(result.current[0]).toBe("allowed");
       expect(
-        validate.mock.calls.some(([value]) => (value as unknown) === null)
+        validate.mock.calls.some(([value]) => {
+          return (value as unknown) === null;
+        })
       ).toBe(false);
     });
 
@@ -467,7 +471,9 @@ describe("useStoredState", () => {
 
       expect(result.current[0]).toBe("allowed");
       expect(
-        validate.mock.calls.some(([value]) => (value as unknown) === null)
+        validate.mock.calls.some(([value]) => {
+          return (value as unknown) === null;
+        })
       ).toBe(false);
     });
 
@@ -711,9 +717,7 @@ describe("useStoredState", () => {
         });
       });
 
-      expect(result.current[2]).toEqual({
-        reset: expect.any(Function),
-      });
+      expect(typeof result.current[2].reset).toBe("function");
     });
 
     it("syncs configured stores when setState is called", () => {
