@@ -92,10 +92,11 @@ Returns:
 You can also destructure only `[state, setState]` if you do not need reset
 behavior.
 
-`setState` only applies valid values. `reset()` restores `defaultValue` by
-calling `setState(defaultValue)`. If state is already at `defaultValue`,
-`reset()` still re-synchronizes the configured stores so it can repair drifted
-query or storage values.
+`setState` only applies valid values. `reset()` restores `defaultValue`. When
+state is not already at `defaultValue`, it follows the normal state update and
+synchronization path. When state is already at `defaultValue`, `reset()` still
+re-synchronizes the configured stores so it can repair drifted query or storage
+values.
 
 ## Behavior
 
