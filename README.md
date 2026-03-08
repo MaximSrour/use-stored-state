@@ -24,7 +24,7 @@ Peer dependency:
 import { useStoredState } from "use-stored-state";
 
 function Example() {
-  const [pageSize, setPageSize] = useStoredState({
+  const [pageSize, setPageSize, { reset }] = useStoredState({
     defaultValue: 25,
     queryKey: "pageSize",
     sessionStorageKey: "usersPageSize",
@@ -44,6 +44,9 @@ function Example() {
         <option value={50}>50</option>
         <option value={100}>100</option>
       </select>
+      <button onClick={reset} type="button">
+        Reset
+      </button>
     </>
   );
 }
@@ -83,10 +86,14 @@ Rules:
 Returns:
 
 ```ts
-[state, setState];
+[state, setState, { reset }];
 ```
 
-Where `setState` only applies valid values.
+You can also destructure only `[state, setState]` if you do not need reset
+behavior.
+
+`setState` only applies valid values. `reset()` restores `defaultValue` by
+calling `setState(defaultValue)`.
 
 ## Behavior
 

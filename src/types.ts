@@ -69,7 +69,11 @@ export type UseStoredStateOptions<State> = {
   ParseSerializeOptions<State> &
   ValidationOptions<State>;
 
-export type UseStoredStateResult<State> = [State, (newState: State) => void];
+export type UseStoredStateResult<State> = [
+  State,
+  (newState: State) => void,
+  { reset: () => void },
+];
 
 export interface UseKeyStoreOptions<State> {
   key: string | null;

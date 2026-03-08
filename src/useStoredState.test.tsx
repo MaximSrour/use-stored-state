@@ -682,6 +682,40 @@ describe("useStoredState", () => {
   });
 
   describe("state updates and synchronization", () => {
+    it("preserves existing two-value destructuring", () => {
+      const { result } = renderHook(() => {
+        return useStoredState({
+          defaultValue: "default",
+          queryKey: "state",
+          sessionStorageKey: "state",
+        });
+      });
+
+      const [state, setState] = result.current;
+
+      act(() => {
+        setState("next");
+      });
+
+      expect(state).toBe("default");
+      expect(result.current[0]).toBe("next");
+      expect(window.location.search).toBe("?state=next");
+      expect(window.sessionStorage.getItem("state")).toBe("next");
+    });
+
+    it("returns reset metadata as the third tuple item", () => {
+      const { result } = renderHook(() => {
+        return useStoredState({
+          defaultValue: "default",
+          queryKey: "state",
+        });
+      });
+
+      expect(result.current[2]).toEqual({
+        reset: expect.any(Function),
+      });
+    });
+
     it("syncs configured stores when setState is called", () => {
       const { result } = renderHook(() => {
         return useStoredState({
@@ -700,6 +734,58 @@ describe("useStoredState", () => {
       expect(state).toBe("next");
       expect(window.location.search).toBe("?state=next");
       expect(window.sessionStorage.getItem("state")).toBe("next");
+    });
+
+    it("resets state back to the default value", () => {
+      const { result } = renderHook(() => {
+        return useStoredState({
+          defaultValue: "default",
+          queryKey: "state",
+          sessionStorageKey: "state",
+        });
+      });
+
+      act(() => {
+        const [, setState] = result.current;
+        setState("next");
+      });
+
+      act(() => {
+        const [, , { reset }] = result.current;
+        reset();
+      });
+
+      expect(result.current[0]).toBe("default");
+    });
+
+    it("re-syncs configured stores when reset is called", () => {
+      const { result } = renderHook(() => {
+        return useStoredState({
+          defaultValue: 3,
+          parse: (rawValue: string) => {
+            return Number(rawValue.replace("v-", ""));
+          },
+          queryKey: "count",
+          serialize: (value: number) => {
+            return `v-${value}`;
+          },
+          sessionStorageKey: "count",
+        });
+      });
+
+      act(() => {
+        const [, setState] = result.current;
+        setState(7);
+      });
+
+      act(() => {
+        const [, , { reset }] = result.current;
+        reset();
+      });
+
+      expect(result.current[0]).toBe(3);
+      expect(window.location.search).toBe("?count=v-3");
+      expect(window.sessionStorage.getItem("count")).toBe("v-3");
     });
 
     it("does not persist invalid updates from validate function", () => {
